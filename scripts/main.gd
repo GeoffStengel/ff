@@ -20,6 +20,9 @@ const WeatherSystem = preload("res://scripts/weather_system.gd")
 const TextLibrary = preload("res://scripts/text_library.gd")
 const CropSystem = preload("res://scripts/crop_system.gd")
 const LayoutSystem = preload("res://scripts/layout_system.gd")
+const VillageRequestsUI = preload("res://scripts/ui/village_requests_ui.gd")
+const UITheme := preload("res://scripts/ui/theme.gd")
+const UIConstants = preload("res://scripts/ui/ui_constants.gd")
 # /*=== PRELOADS / EXTERNAL SYSTEMS END ===*/
 
 # /*=== CORE LAYOUT / THEME CONSTANTS START ===*/
@@ -45,20 +48,6 @@ const PRIMARY_GREEN := "#5d7f35"
 const DISABLED_FILL := "#c8c0ae"
 
 # /*=== CORE LAYOUT / THEME CONSTANTS END ===*/
-
-# /*=== VILLAGE REQUESTS UI CONSTANTS START ===*/
-# These work like CSS variables for the Orders/Village Requests drawer.
-# Tweak these first before editing individual positions.
-const ORDERBOOK_CONTENT_W := 340
-const ORDERBOOK_SECTION_GAP := 4
-const ORDERBOOK_CARD_GAP := 6
-const ORDERBOOK_WEEKLY_H := 54
-const ORDERBOOK_CURRENT_H := 126
-const ORDERBOOK_ACTION_H := 34
-const ORDERBOOK_LIST_H := 150
-const ORDERBOOK_LIST_CARD_H := 48
-
-# /*=== VILLAGE REQUESTS UI CONSTANTS END ===*/
 
 # /*=== RUNTIME GAME STATE START ===*/
 # Core gameplay state: farm, resources, time, weather, orders, and selected UI state.
@@ -142,6 +131,8 @@ var market_panel: VBoxContainer
 var pantry_panel: VBoxContainer
 var guide_panel: VBoxContainer
 var help_panel: VBoxContainer
+var market_title: Label
+var crate_button: Button
 var order_label: Label
 var festival_label: Label
 var accept_order_button: Button
@@ -485,8 +476,7 @@ func _apply_layout_to_controls() -> void:
 	if message_label != null:
 		message_label.position = _message_label_pos()
 		message_label.custom_minimum_size = _message_label_size()
-	if order_scroll != null:
-		order_scroll.custom_minimum_size = Vector2(_drawer_content_size().x, 130)
+	VillageRequestsUI.apply_layout(_village_requests_controls(), _village_requests_content_rect())
 
 
 
@@ -796,45 +786,29 @@ func _build_ui() -> void:
 	save_row.add_child(sound_button)
 
 	# ============================================================
-	# VILLAGE REQUESTS PANEL
-	# ------------------------------------------------------------
-	# This replaces the older uneven "Order Board" stack with a
-	# tighter app-style layout:
-	#   1. Title
-	#   2. Weekly contract card
-	#   3. Current request hero card
-	#   4. Primary action row
-	#   5. Scrollable available request cards
-	#
-	# Notes for future tuning:
-	# - Width/height values come from ORDERBOOK_* constants near
-	#   the top of this file.
-	# - The inner controls are real Godot Controls, while the outer
-	#   drawer/background is still custom drawn in _draw_drawer_cards().
+	# /*=== VILLAGE REQUESTS CONTROLS START ===*/
 	# ============================================================
 	market_panel = VBoxContainer.new()
-	market_panel.position = _drawer_content_pos() + Vector2(20, 0)
-	market_panel.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, _drawer_content_size().y)
-	market_panel.add_theme_constant_override("separation", ORDERBOOK_SECTION_GAP)
 	ui.add_child(market_panel)
 
-	var market_title: Label = Label.new()
+	var content: Rect2 = _village_requests_content_rect()
+	market_title = Label.new()
 	market_title.text = "Village Requests"
-	market_title.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, 32)
+	market_title.custom_minimum_size = VillageRequestsUI.title_minimum_size(content)
 	_style_label(market_title, 25, Color("#3b2b19"))
 	market_panel.add_child(market_title)
 
 	_add_market_section_label(market_panel, "WEEKLY CONTRACT")
 	festival_label = Label.new()
 	festival_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	festival_label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, ORDERBOOK_WEEKLY_H)
+	festival_label.custom_minimum_size = VillageRequestsUI.weekly_contract_minimum_size(content)
 	_style_label(festival_label, 13, Color("#4c3c25"))
 	market_panel.add_child(festival_label)
 
 	_add_market_section_label(market_panel, "CURRENT REQUEST")
 	order_label = Label.new()
 	order_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	order_label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, ORDERBOOK_CURRENT_H)
+	order_label.custom_minimum_size = VillageRequestsUI.current_request_minimum_size(content)
 	_style_label(order_label, 14, Color("#3b2b19"))
 	market_panel.add_child(order_label)
 
@@ -842,37 +816,37 @@ func _build_ui() -> void:
 	# The inactive button is hidden in _update_ui(), so this row does not
 	# waste space showing both Accept and Fulfill at the same time.
 	var market_row: HBoxContainer = HBoxContainer.new()
-	market_row.add_theme_constant_override("separation", 8)
+	market_row.add_theme_constant_override("separation", int(UIConstants.CARD_GAP))
 	market_panel.add_child(market_row)
 
 	accept_order_button = Button.new()
-	accept_order_button.text = "ACCEPT ORDER"
-	accept_order_button.custom_minimum_size = Vector2(214, ORDERBOOK_ACTION_H)
+	accept_order_button.text = "Accept Order"
+	accept_order_button.custom_minimum_size = VillageRequestsUI.action_button_minimum_size()
 	_style_button(accept_order_button, 13, "action")
 	accept_order_button.pressed.connect(func() -> void: call("_accept_selected_order"))
 	market_row.add_child(accept_order_button)
 
 	fulfill_order_button = Button.new()
-	fulfill_order_button.text = "FULFILL ORDER"
-	fulfill_order_button.custom_minimum_size = Vector2(214, ORDERBOOK_ACTION_H)
-	_style_button(fulfill_order_button, 13, "primary")
+	fulfill_order_button.text = "Fulfill"
+	fulfill_order_button.custom_minimum_size = VillageRequestsUI.action_button_minimum_size()
+	_style_button(fulfill_order_button, 13, "action")
 	fulfill_order_button.pressed.connect(func() -> void: call("_fulfill_order"))
 	market_row.add_child(fulfill_order_button)
 
-	var crate_button: Button = Button.new()
+	crate_button = Button.new()
 	crate_button.text = "Sell crate"
-	crate_button.custom_minimum_size = Vector2(108, ORDERBOOK_ACTION_H)
+	crate_button.custom_minimum_size = VillageRequestsUI.action_button_minimum_size()
 	_style_button(crate_button, 13, "secondary")
 	crate_button.pressed.connect(_sell_crate)
 	market_row.add_child(crate_button)
 
 	_add_market_section_label(market_panel, "AVAILABLE REQUESTS")
 	order_scroll = ScrollContainer.new()
-	order_scroll.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, ORDERBOOK_LIST_H)
+	order_scroll.custom_minimum_size = VillageRequestsUI.request_list_minimum_size(content)
 	market_panel.add_child(order_scroll)
 
 	order_list = VBoxContainer.new()
-	order_list.add_theme_constant_override("separation", ORDERBOOK_CARD_GAP)
+	order_list.add_theme_constant_override("separation", int(UIConstants.CARD_GAP))
 	order_scroll.add_child(order_list)
 	for i in 5:
 		_add_order_button(order_list, i)
@@ -881,22 +855,26 @@ func _build_ui() -> void:
 	# do not compete with the selected request and primary action button.
 	inventory_label = Label.new()
 	inventory_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	inventory_label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, 18)
+	inventory_label.custom_minimum_size = VillageRequestsUI.support_label_minimum_size(content)
 	_style_label(inventory_label, 12, Color("#5b492e"))
 	market_panel.add_child(inventory_label)
 
 	relationship_label = Label.new()
 	relationship_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	relationship_label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, 20)
+	relationship_label.custom_minimum_size = VillageRequestsUI.support_label_minimum_size(content)
 	_style_label(relationship_label, 12, Color("#5b492e"))
 	market_panel.add_child(relationship_label)
 
 	logbook_label = Label.new()
 	logbook_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	logbook_label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, 34)
+	logbook_label.custom_minimum_size = VillageRequestsUI.logbook_minimum_size(content)
 	logbook_label.clip_text = true
 	_style_label(logbook_label, 11, Color("#4c3c25"))
 	market_panel.add_child(logbook_label)
+	VillageRequestsUI.apply_layout(_village_requests_controls(), content)
+	# ============================================================
+	# /*=== VILLAGE REQUESTS CONTROLS END ===*/
+	# ============================================================
 
 	pantry_panel = VBoxContainer.new()
 	pantry_panel.position = _drawer_content_pos()
@@ -1103,6 +1081,27 @@ func _add_section_label(parent: Control, text: String) -> void:
 
 
 
+func _village_requests_content_rect() -> Rect2:
+	return Rect2(_drawer_content_pos(), _drawer_content_size())
+
+
+func _village_requests_controls() -> Dictionary:
+	return {
+		"market_panel": market_panel,
+		"market_title": market_title,
+		"weekly_label": festival_label,
+		"order_detail_label": order_label,
+		"accept_button": accept_order_button,
+		"fulfill_button": fulfill_order_button,
+		"crate_button": crate_button,
+		"order_scroll": order_scroll,
+		"order_buttons": order_buttons,
+		"inventory_label": inventory_label,
+		"relationship_label": relationship_label,
+		"logbook_label": logbook_label
+	}
+
+
 func _add_market_section_label(parent: Control, text: String) -> void:
 	# ============================================================
 	# VILLAGE REQUESTS SECTION LABEL
@@ -1113,7 +1112,7 @@ func _add_market_section_label(parent: Control, text: String) -> void:
 	# ============================================================
 	var label: Label = Label.new()
 	label.text = text
-	label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, 12)
+	label.custom_minimum_size = VillageRequestsUI.section_label_minimum_size(_village_requests_content_rect())
 	_style_label(label, 10, Color("#725431"))
 	parent.add_child(label)
 
@@ -1186,7 +1185,8 @@ func _add_order_button(parent: Control, slot: int) -> void:
 	# ============================================================
 	var button: Button = Button.new()
 	button.toggle_mode = true
-	button.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, ORDERBOOK_LIST_CARD_H)
+	var content: Rect2 = _village_requests_content_rect()
+	button.custom_minimum_size = VillageRequestsUI.request_card_minimum_size(content)
 	button.clip_text = true
 	_style_button(button, 12, "secondary")
 	button.pressed.connect(func() -> void: call("_select_order_slot", slot))
@@ -1434,43 +1434,33 @@ func _draw_open_drawer() -> void:
 
 
 func _draw_drawer_cards() -> void:
-	var content: Rect2 = Rect2(_drawer_content_pos(), _drawer_content_size())
+	var content: Rect2 = _village_requests_content_rect()
 	var card_x: float = content.position.x
 	var card_w: float = content.size.x
+
 	match side_tab:
 		0:
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, 116)))
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 186), Vector2(card_w, 158)))
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 368), Vector2(card_w, 176)))
+
 		1:
-			# ============================================================
-			# VILLAGE REQUESTS CARD BACKPLATES
-			# ------------------------------------------------------------
-			# These are the hand-drawn card backgrounds behind the real
-			# Godot Controls. Keep this in sync with the ORDERBOOK_* values
-			# and the market_panel layout above.
-			#
-			# Design note:
-			# Older passes drew separate boxes behind Customer / Order /
-			# Payout / Time. That made the selected request feel broken
-			# into chunks. This pass draws ONE hero card instead.
-			# ============================================================
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 46), Vector2(card_w, 62)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 122), Vector2(card_w, 168)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 306), Vector2(card_w, 44)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 382), Vector2(card_w, 176)))
+			for backplate in VillageRequestsUI.card_backplates(content):
+				_draw_drawer_card(backplate)
+
 		2:
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, 92)))
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 162), Vector2(card_w, 78)))
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 262), Vector2(card_w, 110)))
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 394), Vector2(card_w, 98)))
+
 		3:
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, 112)))
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 182), Vector2(card_w, 184)))
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 396), Vector2(card_w, 164)))
+
 		4:
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, minf(470.0, content.size.y - 64.0))))
-
 
 
 func _draw_drawer_card(rect: Rect2) -> void:
@@ -2945,70 +2935,21 @@ func _order_variety_short(variety_index: int) -> String:
 
 
 func _order_text() -> String:
-	# ============================================================
-	# CURRENT REQUEST HERO COPY
-	# ------------------------------------------------------------
-	# Compact single-card format:
-	#   status + customer
-	#   order item + note
-	#   payout + time on one line
-	# ============================================================
-	var selected: Dictionary = _selected_order()
-	if selected.is_empty():
-		return "📋 No request selected\n\nAvailable requests will show here when villagers post them."
-
-	var accepted: bool = _selected_order_is_accepted()
-	var status: String = "✅ ACTIVE REQUEST" if accepted else "🆕 NEW OFFER"
-	var customer: String = _short_customer_name(String(selected.get("customer", "Customer")))
-	var quantity: int = int(selected.get("need", 0))
-	var variety_name: String = _order_variety_short(int(selected.get("variety", -1)))
-	var label: String = String(selected.get("label", "Fresh figs"))
-	var reward: int = int(selected.get("reward", 0))
-	var patience: int = int(selected.get("patience", 0))
-	var action_line: String = "Ready when packed." if accepted else "Accept when your pantry can handle it."
-
-	return "%s\n%s\n\n%sx %s figs\n%s\n\n💰 $%s      ⏳ %s left\n%s" % [
-		status,
-		customer,
-		quantity,
-		variety_name,
-		label,
-		reward,
-		_day_count_text(patience),
-		action_line
-	]
-
+	return VillageRequestsUI.current_request_text(
+		selected_order_index,
+		accepted_orders,
+		order_offers,
+		varieties
+	)
 
 
 func _order_button_text(index: int) -> String:
-	# ============================================================
-	# AVAILABLE REQUEST CARD COPY
-	# ------------------------------------------------------------
-	# Two-line card format for the scroll list.
-	# The button background supplies the card shape.
-	# ============================================================
-	var selected: Dictionary = _order_at(index)
-	if selected.is_empty():
-		return ""
-
-	var accepted: bool = OrderSystem.selected_order_is_accepted(index, accepted_orders)
-	var status_icon: String = "✅" if accepted else "🆕"
-	var customer: String = _short_customer_name(String(selected.get("customer", "Customer")))
-	var quantity: int = int(selected.get("need", 0))
-	var variety_name: String = _order_variety_short(int(selected.get("variety", -1)))
-	var reward: int = int(selected.get("reward", 0))
-	var patience: int = int(selected.get("patience", 0))
-	var time_text: String = _day_count_text(patience) if accepted else "review"
-
-	return "%s %s\n%sx %s figs   •   $%s   •   %s" % [
-		status_icon,
-		customer,
-		quantity,
-		variety_name,
-		reward,
-		time_text
-	]
-
+	return VillageRequestsUI.request_card_text(
+		index,
+		accepted_orders,
+		order_offers,
+		varieties
+	)
 
 
 func _update_order_buttons() -> void:
