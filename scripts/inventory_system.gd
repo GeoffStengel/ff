@@ -1,3 +1,6 @@
+# ============================================================
+# /*=== INVENTORY SYSTEM FILE START ===*/
+# ============================================================
 extends RefCounted
 
 static func pantry_figs_text(varieties: Array[Dictionary], fig_bins: Array[int]) -> String:
@@ -79,3 +82,62 @@ static func can_take_cutting(plot: Dictionary, varieties: Array[Dictionary]) -> 
 	var variety_index: int = int(plot.get("variety", 0))
 	var grow_days: int = int(varieties[variety_index]["grow_days"])
 	return int(plot.get("progress", 0)) >= grow_days
+
+# ============================================================
+# /*=== INVENTORY ACTION RESULTS START ===*/
+# ============================================================
+
+static func make_jam(fig_bins: Array[int], mason_jars: int, jam_jars: int) -> Dictionary:
+	if total_items(fig_bins) < 5:
+		return {"ok": false, "reason": "not_enough_figs", "mason_jars": mason_jars, "jam_jars": jam_jars}
+
+	if mason_jars <= 0:
+		return {"ok": false, "reason": "no_jars", "mason_jars": mason_jars, "jam_jars": jam_jars}
+
+	take_any(fig_bins, 5)
+	mason_jars -= 1
+	jam_jars += 1
+
+	return {"ok": true, "mason_jars": mason_jars, "jam_jars": jam_jars}
+
+
+static func sell_jam(jam_jars: int) -> Dictionary:
+	if jam_jars <= 0:
+		return {"ok": false, "reason": "no_jam", "sold_jars": 0, "payout": 0, "festival_credit": 0, "jam_jars": jam_jars}
+
+	var sold_jars: int = jam_jars
+	var payout: int = sold_jars * 18
+	var festival_credit: int = sold_jars * 5
+
+	return {"ok": true, "sold_jars": sold_jars, "payout": payout, "festival_credit": festival_credit, "jam_jars": 0}
+
+
+static func buy_mason_jars(coins: int, mason_jars: int) -> Dictionary:
+	if coins < 6:
+		return {"ok": false, "reason": "not_enough_coins", "coins": coins, "mason_jars": mason_jars}
+
+	coins -= 6
+	mason_jars += 3
+
+	return {"ok": true, "coins": coins, "mason_jars": mason_jars}
+
+
+static func sell_crate(fig_bins: Array[int], varieties: Array[Dictionary]) -> Dictionary:
+	var total: int = total_items(fig_bins)
+	if total <= 0:
+		return {"ok": false, "reason": "no_figs", "total": 0, "payout": 0}
+
+	var payout: int = 0
+	for i in fig_bins.size():
+		payout += fig_bins[i] * int(varieties[i]["value"])
+		fig_bins[i] = 0
+
+	return {"ok": true, "total": total, "payout": payout}
+
+# ============================================================
+# /*=== INVENTORY ACTION RESULTS END ===*/
+# ============================================================
+
+# ============================================================
+# /*=== INVENTORY SYSTEM FILE END ===*/
+# ============================================================

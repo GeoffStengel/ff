@@ -1,3 +1,6 @@
+# ============================================================
+# /*=== TEXT LIBRARY FILE START ===*/
+# ============================================================
 extends RefCounted
 
 static func how_to_play_text() -> String:
@@ -42,17 +45,6 @@ static func tutorial_short_text(tutorial_index: int) -> String:
 		4:
 			return "Guide 5/5"
 	return "Guide done"
-
-
-static func ripeness_yield_bonus(ripe_days: int) -> int:
-	if ripe_days <= 0:
-		return 1
-	if ripe_days == 1:
-		return 2
-	if ripe_days == 2:
-		return 0
-	return -2
-
 
 static func ripeness_label(ripe_days: int) -> String:
 	if ripe_days <= 0:
@@ -244,3 +236,6 @@ static func short_customer_name(customer: String) -> String:
 		"Tavi from the festival":
 			return "Tavi"
 	return customer
+# ============================================================
+# /*=== TEXT LIBRARY FILE END ===*/
+# ============================================================

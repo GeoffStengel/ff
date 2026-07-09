@@ -1,3 +1,8 @@
-res://scripts/inventory_system.gd
-res://scripts/main.gd
+res://scripts/layout_system.gd
 res://scripts/order_system.gd
+res://scripts/main.gd
+res://scripts/save_system.gd
+res://scripts/crop_system.gd
+res://scripts/inventory_system.gd
+res://scripts/text_library.gd
+res://scripts/weather_system.gd

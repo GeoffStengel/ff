@@ -1,5 +1,15 @@
+# ============================================================
+# /*=== MAIN SCRIPT FILE START ===*/
+# ============================================================
+# /*=== MAIN.GD FILE START ===*/
+# Main scene controller for the farming prototype.
+# NOTE: This file is intentionally annotated with START/END markers
+# so we can safely find/refactor sections without hunting through 2,900+ lines.
 extends Node2D
 
+
+# /*=== PRELOADS / EXTERNAL SYSTEMS START ===*/
+# Dependencies loaded from scripts/. These are good extraction targets as main.gd shrinks.
 const GameData = preload("res://scripts/game_data.gd")
 const AssetLibrary = preload("res://scripts/asset_library.gd")
 const AudioLibrary = preload("res://scripts/audio_library.gd")
@@ -10,6 +20,10 @@ const WeatherSystem = preload("res://scripts/weather_system.gd")
 const TextLibrary = preload("res://scripts/text_library.gd")
 const CropSystem = preload("res://scripts/crop_system.gd")
 const LayoutSystem = preload("res://scripts/layout_system.gd")
+# /*=== PRELOADS / EXTERNAL SYSTEMS END ===*/
+
+# /*=== CORE LAYOUT / THEME CONSTANTS START ===*/
+# Global dimensions and colors used by the hand-drawn UI.
 
 const GRID_W := 8
 const GRID_H := 6
@@ -29,6 +43,25 @@ const TEXT_DARK := "#3b2b19"
 const MUTED_TEXT := "#725431"
 const PRIMARY_GREEN := "#5d7f35"
 const DISABLED_FILL := "#c8c0ae"
+
+# /*=== CORE LAYOUT / THEME CONSTANTS END ===*/
+
+# /*=== VILLAGE REQUESTS UI CONSTANTS START ===*/
+# These work like CSS variables for the Orders/Village Requests drawer.
+# Tweak these first before editing individual positions.
+const ORDERBOOK_CONTENT_W := 340
+const ORDERBOOK_SECTION_GAP := 4
+const ORDERBOOK_CARD_GAP := 6
+const ORDERBOOK_WEEKLY_H := 54
+const ORDERBOOK_CURRENT_H := 126
+const ORDERBOOK_ACTION_H := 34
+const ORDERBOOK_LIST_H := 150
+const ORDERBOOK_LIST_CARD_H := 48
+
+# /*=== VILLAGE REQUESTS UI CONSTANTS END ===*/
+
+# /*=== RUNTIME GAME STATE START ===*/
+# Core gameplay state: farm, resources, time, weather, orders, and selected UI state.
 
 var tile_size: int = BASE_TILE
 var farm_origin: Vector2 = Vector2(230, 116)
@@ -85,6 +118,10 @@ var accepted_orders: Array[Dictionary] = []
 var selected_order_index: int = 0
 var game_log: Array[String] = []
 
+# /*=== RUNTIME GAME STATE END ===*/
+
+# /*=== NODE / UI REFERENCES START ===*/
+# Runtime-created Control nodes and labels. Built in _build_ui(), positioned in layout functions.
 var plots: Array = []
 var tool_buttons: Dictionary = {}
 var variety_buttons: Dictionary = {}
@@ -153,6 +190,8 @@ var item_textures: Dictionary = {}
 var ui_textures: Dictionary = {}
 var tool_textures: Dictionary = {}
 
+# /*=== NODE / UI REFERENCES END ===*/
+
 func _ready() -> void:
 	randomize()
 	_build_plots()
@@ -165,6 +204,7 @@ func _ready() -> void:
 	AssetLibrary.load_art_assets(crop_textures, item_textures, ui_textures, tool_textures)
 	_build_ui()
 	_update_ui()
+
 
 
 func _process(delta: float) -> void:
@@ -192,6 +232,7 @@ func _process(delta: float) -> void:
 	if ui_dirty:
 		_update_ui()
 	queue_redraw()
+
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -251,6 +292,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				call("_load_game")
 
 
+
 func _draw() -> void:
 	_draw_background()
 	_draw_top_hud_bar()
@@ -263,6 +305,7 @@ func _draw() -> void:
 	_draw_bottom_status_bar()
 	_draw_dialogue_popup()
 	_draw_pause_overlay()
+
 
 
 func _build_plots() -> void:
@@ -285,8 +328,10 @@ func _build_plots() -> void:
 		plots.append(row)
 
 
+
 func _is_mobile_layout() -> bool:
 	return LayoutSystem.is_mobile_layout(get_viewport_rect().size)
+
 
 func _update_layout() -> bool:
 	var viewport_size: Vector2 = get_viewport_rect().size
@@ -311,78 +356,103 @@ func _update_layout() -> bool:
 	return true
 
 
+
 func _viewport_size() -> Vector2:
 	return get_viewport_rect().size
+
 
 
 func _hud_rect() -> Rect2:
 	return LayoutSystem.hud_rect(SCREEN_PAD, HUD_H, _viewport_size())
 
+
 func _hud_row_one_pos() -> Vector2:
 	return LayoutSystem.hud_row_one_pos(_hud_rect())
+
 
 func _hud_row_two_pos() -> Vector2:
 	return LayoutSystem.hud_row_two_pos(_hud_rect())
 
+
 func _left_dock_rect() -> Rect2:
 	return LayoutSystem.left_dock_rect(SCREEN_PAD, HUD_H, LEFT_DOCK_W, BOTTOM_BAR_H, GAP, _viewport_size(), _is_mobile_layout())
+
 
 func _tool_pocket_rect() -> Rect2:
 	return LayoutSystem.tool_pocket_rect(_left_dock_rect())
 
+
 func _menu_pocket_rect() -> Rect2:
 	return LayoutSystem.menu_pocket_rect(_left_dock_rect())
+
 
 func _tool_column_pos() -> Vector2:
 	return LayoutSystem.tool_column_pos(_tool_pocket_rect())
 
+
 func _menu_column_pos() -> Vector2:
 	return LayoutSystem.menu_column_pos(_menu_pocket_rect())
+
 
 func _drawer_rect() -> Rect2:
 	return LayoutSystem.drawer_rect(SCREEN_PAD, HUD_H, DRAWER_W, BOTTOM_BAR_H, GAP, _viewport_size(), _is_mobile_layout())
 
+
 func _drawer_content_pos() -> Vector2:
 	return LayoutSystem.drawer_content_pos(_drawer_rect())
+
 
 func _drawer_content_size() -> Vector2:
 	return LayoutSystem.drawer_content_size(_drawer_rect())
 
+
 func _drawer_hint_pos() -> Vector2:
 	return LayoutSystem.drawer_hint_pos(_drawer_rect())
+
 
 func _drawer_hint_size() -> Vector2:
 	return LayoutSystem.drawer_hint_size(_drawer_rect())
 
+
 func _farm_board_size() -> Vector2:
 	return LayoutSystem.farm_board_size(GRID_W, GRID_H, tile_size)
+
 
 func _farm_board_rect() -> Rect2:
 	return LayoutSystem.farm_board_rect(farm_board_position, _farm_board_size())
 
+
 func _plot_bed_rect() -> Rect2:
 	return LayoutSystem.plot_bed_rect(farm_origin, GRID_W, GRID_H, tile_size)
+
 
 func _bottom_status_rect() -> Rect2:
 	return LayoutSystem.bottom_status_rect(SCREEN_PAD, BOTTOM_BAR_H, GAP, _viewport_size(), _farm_board_rect(), _is_mobile_layout())
 
+
 func _bottom_card_rect(index: int) -> Rect2:
 	return LayoutSystem.bottom_card_rect(index, GAP, _bottom_status_rect())
+
 
 func _bottom_action_label_pos() -> Vector2:
 	return LayoutSystem.bottom_action_label_pos(_bottom_card_rect(0))
 
+
 func _plot_card_label_pos() -> Vector2:
 	return LayoutSystem.plot_card_label_pos(_bottom_card_rect(1))
+
 
 func _bottom_card_label_size() -> Vector2:
 	return LayoutSystem.bottom_card_label_size(_bottom_card_rect(0))
 
+
 func _message_label_pos() -> Vector2:
 	return LayoutSystem.message_label_pos(_bottom_status_rect())
 
+
 func _message_label_size() -> Vector2:
 	return LayoutSystem.message_label_size(_bottom_status_rect())
+
 
 func _apply_layout_to_controls() -> void:
 	if top_bar != null:
@@ -419,8 +489,10 @@ func _apply_layout_to_controls() -> void:
 		order_scroll.custom_minimum_size = Vector2(_drawer_content_size().x, 130)
 
 
+
 func _hud_label_width(key: String) -> int:
 	return LayoutSystem.hud_label_width(key)
+
 
 func _build_sfx() -> void:
 	sfx_player = AudioStreamPlayer.new()
@@ -444,6 +516,7 @@ func _build_sfx() -> void:
 	_sync_music()
 
 
+
 func _sync_music() -> void:
 	if music_player == null:
 		return
@@ -452,6 +525,7 @@ func _sync_music() -> void:
 			music_player.play()
 	else:
 		music_player.stop()
+
 
 
 func _play_sfx(name: String) -> void:
@@ -466,11 +540,13 @@ func _play_sfx(name: String) -> void:
 	sfx_player.play()
 
 
+
 func _texture_from(group: Dictionary, key: String) -> Texture2D:
 	if not group.has(key):
 		return null
 	var texture: Texture2D = group[key] as Texture2D
 	return texture
+
 
 
 func _apply_button_icon(button: Button, texture: Texture2D) -> void:
@@ -481,11 +557,13 @@ func _apply_button_icon(button: Button, texture: Texture2D) -> void:
 	button.text = ""
 
 
+
 func _decorate_button_icon(button: Button, texture: Texture2D) -> void:
 	if texture == null:
 		return
 	button.icon = texture
 	button.expand_icon = false
+
 
 
 func _tool_texture(tool: int) -> Texture2D:
@@ -499,6 +577,7 @@ func _tool_texture(tool: int) -> Texture2D:
 		Tool.HARVEST:
 			return _texture_from(tool_textures, "harvest")
 	return null
+
 
 
 func _tab_texture(tab: int) -> Texture2D:
@@ -516,11 +595,13 @@ func _tab_texture(tab: int) -> Texture2D:
 	return null
 
 
+
 func _draw_texture_centered(texture: Texture2D, center: Vector2, size: Vector2) -> void:
 	if texture == null:
 		return
 	var rect: Rect2 = Rect2(center - size * 0.5, size)
 	draw_texture_rect(texture, rect, false)
+
 
 
 func _build_ui() -> void:
@@ -714,83 +795,108 @@ func _build_ui() -> void:
 	sound_button.pressed.connect(func() -> void: call("_toggle_sound"))
 	save_row.add_child(sound_button)
 
+	# ============================================================
+	# VILLAGE REQUESTS PANEL
+	# ------------------------------------------------------------
+	# This replaces the older uneven "Order Board" stack with a
+	# tighter app-style layout:
+	#   1. Title
+	#   2. Weekly contract card
+	#   3. Current request hero card
+	#   4. Primary action row
+	#   5. Scrollable available request cards
+	#
+	# Notes for future tuning:
+	# - Width/height values come from ORDERBOOK_* constants near
+	#   the top of this file.
+	# - The inner controls are real Godot Controls, while the outer
+	#   drawer/background is still custom drawn in _draw_drawer_cards().
+	# ============================================================
 	market_panel = VBoxContainer.new()
-	market_panel.position = _drawer_content_pos()
-	market_panel.custom_minimum_size = _drawer_content_size()
-	market_panel.add_theme_constant_override("separation", 4)
+	market_panel.position = _drawer_content_pos() + Vector2(20, 0)
+	market_panel.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, _drawer_content_size().y)
+	market_panel.add_theme_constant_override("separation", ORDERBOOK_SECTION_GAP)
 	ui.add_child(market_panel)
 
 	var market_title: Label = Label.new()
-	market_title.text = "Order Board"
-	_style_label(market_title, 24, Color("#3b2b19"))
+	market_title.text = "Village Requests"
+	market_title.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, 32)
+	_style_label(market_title, 25, Color("#3b2b19"))
 	market_panel.add_child(market_title)
 
-	_add_section_label(market_panel, "WEEKLY TABLE")
+	_add_market_section_label(market_panel, "WEEKLY CONTRACT")
 	festival_label = Label.new()
 	festival_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	festival_label.custom_minimum_size = Vector2(376, 36)
-	_style_label(festival_label, 14, Color("#4c3c25"))
+	festival_label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, ORDERBOOK_WEEKLY_H)
+	_style_label(festival_label, 13, Color("#4c3c25"))
 	market_panel.add_child(festival_label)
 
-	_add_section_label(market_panel, "SELECTED ORDER")
+	_add_market_section_label(market_panel, "CURRENT REQUEST")
 	order_label = Label.new()
 	order_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	order_label.custom_minimum_size = Vector2(376, 52)
-	_style_label(order_label, 14, Color("#4c3c25"))
+	order_label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, ORDERBOOK_CURRENT_H)
+	_style_label(order_label, 14, Color("#3b2b19"))
 	market_panel.add_child(order_label)
 
-	_add_section_label(market_panel, "POSTED ORDERS")
+	# Primary action row: keep the main request action visually dominant.
+	# The inactive button is hidden in _update_ui(), so this row does not
+	# waste space showing both Accept and Fulfill at the same time.
+	var market_row: HBoxContainer = HBoxContainer.new()
+	market_row.add_theme_constant_override("separation", 8)
+	market_panel.add_child(market_row)
+
+	accept_order_button = Button.new()
+	accept_order_button.text = "ACCEPT ORDER"
+	accept_order_button.custom_minimum_size = Vector2(214, ORDERBOOK_ACTION_H)
+	_style_button(accept_order_button, 13, "action")
+	accept_order_button.pressed.connect(func() -> void: call("_accept_selected_order"))
+	market_row.add_child(accept_order_button)
+
+	fulfill_order_button = Button.new()
+	fulfill_order_button.text = "FULFILL ORDER"
+	fulfill_order_button.custom_minimum_size = Vector2(214, ORDERBOOK_ACTION_H)
+	_style_button(fulfill_order_button, 13, "primary")
+	fulfill_order_button.pressed.connect(func() -> void: call("_fulfill_order"))
+	market_row.add_child(fulfill_order_button)
+
+	var crate_button: Button = Button.new()
+	crate_button.text = "Sell crate"
+	crate_button.custom_minimum_size = Vector2(108, ORDERBOOK_ACTION_H)
+	_style_button(crate_button, 13, "secondary")
+	crate_button.pressed.connect(_sell_crate)
+	market_row.add_child(crate_button)
+
+	_add_market_section_label(market_panel, "AVAILABLE REQUESTS")
 	order_scroll = ScrollContainer.new()
-	order_scroll.custom_minimum_size = Vector2(376, 130)
+	order_scroll.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, ORDERBOOK_LIST_H)
 	market_panel.add_child(order_scroll)
+
 	order_list = VBoxContainer.new()
-	order_list.add_theme_constant_override("separation", 6)
+	order_list.add_theme_constant_override("separation", ORDERBOOK_CARD_GAP)
 	order_scroll.add_child(order_list)
 	for i in 5:
 		_add_order_button(order_list, i)
 
+	# Compact supporting info. These stay below the request list so they
+	# do not compete with the selected request and primary action button.
 	inventory_label = Label.new()
 	inventory_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	inventory_label.custom_minimum_size = Vector2(376, 24)
-	_style_label(inventory_label, 13, Color("#5b492e"))
+	inventory_label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, 18)
+	_style_label(inventory_label, 12, Color("#5b492e"))
 	market_panel.add_child(inventory_label)
 
-	_add_section_label(market_panel, "STATUS")
 	relationship_label = Label.new()
 	relationship_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	relationship_label.custom_minimum_size = Vector2(376, 24)
-	_style_label(relationship_label, 13, Color("#5b492e"))
+	relationship_label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, 20)
+	_style_label(relationship_label, 12, Color("#5b492e"))
 	market_panel.add_child(relationship_label)
 
-	_add_section_label(market_panel, "LOGBOOK")
 	logbook_label = Label.new()
 	logbook_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	logbook_label.custom_minimum_size = Vector2(376, 44)
+	logbook_label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, 34)
 	logbook_label.clip_text = true
-	_style_label(logbook_label, 12, Color("#4c3c25"))
+	_style_label(logbook_label, 11, Color("#4c3c25"))
 	market_panel.add_child(logbook_label)
-
-	var market_row: HBoxContainer = HBoxContainer.new()
-	market_row.add_theme_constant_override("separation", 8)
-	market_panel.add_child(market_row)
-	accept_order_button = Button.new()
-	accept_order_button.text = "Accept"
-	accept_order_button.custom_minimum_size = Vector2(120, 34)
-	_style_button(accept_order_button, 13, "action")
-	accept_order_button.pressed.connect(func() -> void: call("_accept_selected_order"))
-	market_row.add_child(accept_order_button)
-	fulfill_order_button = Button.new()
-	fulfill_order_button.text = "Fulfill"
-	fulfill_order_button.custom_minimum_size = Vector2(120, 34)
-	_style_button(fulfill_order_button, 13, "primary")
-	fulfill_order_button.pressed.connect(func() -> void: call("_fulfill_order"))
-	market_row.add_child(fulfill_order_button)
-	var crate_button: Button = Button.new()
-	crate_button.text = "Sell crate"
-	crate_button.custom_minimum_size = Vector2(120, 34)
-	_style_button(crate_button, 13, "secondary")
-	crate_button.pressed.connect(_sell_crate)
-	market_row.add_child(crate_button)
 
 	pantry_panel = VBoxContainer.new()
 	pantry_panel.position = _drawer_content_pos()
@@ -983,6 +1089,7 @@ func _build_ui() -> void:
 	_apply_layout_to_controls()
 
 
+
 func _add_section_label(parent: Control, text: String) -> void:
 	var spacer: ColorRect = ColorRect.new()
 	spacer.color = Color(1.0, 1.0, 1.0, 0.0)
@@ -993,6 +1100,23 @@ func _add_section_label(parent: Control, text: String) -> void:
 	label.custom_minimum_size = Vector2(376, 13)
 	_style_label(label, 10, Color("#725431"))
 	parent.add_child(label)
+
+
+
+func _add_market_section_label(parent: Control, text: String) -> void:
+	# ============================================================
+	# VILLAGE REQUESTS SECTION LABEL
+	# ------------------------------------------------------------
+	# Local version of _add_section_label() with no spacer and with the
+	# orderbook width. This keeps the request drawer tighter and avoids
+	# the uneven vertical gaps seen in the first pass.
+	# ============================================================
+	var label: Label = Label.new()
+	label.text = text
+	label.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, 12)
+	_style_label(label, 10, Color("#725431"))
+	parent.add_child(label)
+
 
 
 func _add_tab_button(parent: Control, text: String, tab: int) -> void:
@@ -1006,6 +1130,7 @@ func _add_tab_button(parent: Control, text: String, tab: int) -> void:
 	button.pressed.connect(func() -> void: call("_set_side_tab", tab))
 	parent.add_child(button)
 	tab_buttons[tab] = button
+
 
 
 func _tab_role(tab: int) -> String:
@@ -1023,6 +1148,7 @@ func _tab_role(tab: int) -> String:
 	return "nav"
 
 
+
 func _tab_icon(tab: int) -> String:
 	match tab:
 		0:
@@ -1038,6 +1164,7 @@ func _tab_icon(tab: int) -> String:
 	return "•"
 
 
+
 func _set_side_tab(tab: int) -> void:
 	var next_tab: int = clampi(tab, 0, 4)
 	if panel_open and side_tab == next_tab:
@@ -1048,15 +1175,24 @@ func _set_side_tab(tab: int) -> void:
 	_update_ui()
 
 
+
 func _add_order_button(parent: Control, slot: int) -> void:
+	# ============================================================
+	# AVAILABLE REQUEST CARD BUTTON
+	# ------------------------------------------------------------
+	# Each order in the scroll list is still a Button, but we size it
+	# like a small delivery-app card instead of a single cramped line.
+	# Text comes from OrderSystem.order_button_text().
+	# ============================================================
 	var button: Button = Button.new()
 	button.toggle_mode = true
-	button.custom_minimum_size = Vector2(376, 42)
+	button.custom_minimum_size = Vector2(ORDERBOOK_CONTENT_W, ORDERBOOK_LIST_CARD_H)
 	button.clip_text = true
 	_style_button(button, 12, "secondary")
 	button.pressed.connect(func() -> void: call("_select_order_slot", slot))
 	parent.add_child(button)
 	order_buttons.append(button)
+
 
 
 func _add_moisture_key(parent: Control, swatch_color: Color, label_text: String) -> void:
@@ -1073,12 +1209,14 @@ func _add_moisture_key(parent: Control, swatch_color: Color, label_text: String)
 	group.add_child(label)
 
 
+
 func _style_label(label: Label, size: int, color: Color) -> void:
 	label.add_theme_font_size_override("font_size", size)
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_shadow_color", Color(1.0, 1.0, 1.0, 0.28))
 	label.add_theme_constant_override("shadow_offset_x", 1)
 	label.add_theme_constant_override("shadow_offset_y", 1)
+
 
 
 func _button_style(fill: Color, border: Color) -> StyleBoxFlat:
@@ -1096,6 +1234,7 @@ func _button_style(fill: Color, border: Color) -> StyleBoxFlat:
 	return style
 
 
+
 func _rounded_box(fill: Color, border: Color, radius: int, border_width: int = 1) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = fill
@@ -1111,8 +1250,10 @@ func _rounded_box(fill: Color, border: Color, radius: int, border_width: int = 1
 	return style
 
 
+
 func _draw_rounded_box(rect: Rect2, fill: Color, border: Color, radius: int, border_width: int = 1) -> void:
 	draw_style_box(_rounded_box(fill, border, radius, border_width), rect)
+
 
 
 func _style_button(button: Button, size: int, role: String = "neutral") -> void:
@@ -1205,6 +1346,7 @@ func _style_button(button: Button, size: int, role: String = "neutral") -> void:
 	button.add_theme_color_override("font_disabled_color", Color("#5f574b"))
 
 
+
 func _add_tool_button(parent: Control, text: String, tool: int) -> void:
 	var button: Button = Button.new()
 	button.text = text
@@ -1230,6 +1372,7 @@ func _add_tool_button(parent: Control, text: String, tool: int) -> void:
 	tool_buttons[tool] = buttons
 
 
+
 func _add_variety_button(parent: Control, index: int) -> void:
 	var variety: Dictionary = varieties[index]
 	var button: Button = Button.new()
@@ -1240,6 +1383,7 @@ func _add_variety_button(parent: Control, index: int) -> void:
 	button.pressed.connect(func() -> void: _select_variety(index))
 	parent.add_child(button)
 	variety_buttons[index] = button
+
 
 
 func _draw_background() -> void:
@@ -1263,9 +1407,11 @@ func _draw_background() -> void:
 			draw_arc(Vector2(610, y), 38, 0.2, 2.9, 18, Color("#d18b42"), 2.0)
 
 
+
 func _draw_soft_hill(pos: Vector2, size: Vector2, color: Color) -> void:
 	var center: Vector2 = pos + Vector2(size.x * 0.5, size.y)
 	draw_arc(center, size.x * 0.5, PI, TAU, 40, color, size.y)
+
 
 
 func _draw_background_trees(ground_y: float) -> void:
@@ -1278,11 +1424,13 @@ func _draw_background_trees(ground_y: float) -> void:
 		draw_circle(Vector2(x, base_y - 44.0), 22.0, Color(0.25, 0.45, 0.22, 0.20))
 
 
+
 func _draw_open_drawer() -> void:
 	if not panel_open:
 		return
 	_draw_ui_panel(_drawer_rect())
 	_draw_drawer_cards()
+
 
 
 func _draw_drawer_cards() -> void:
@@ -1295,11 +1443,22 @@ func _draw_drawer_cards() -> void:
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 186), Vector2(card_w, 158)))
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 368), Vector2(card_w, 176)))
 		1:
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, 66)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 128), Vector2(card_w, 98)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 244), Vector2(card_w, 158)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 418), Vector2(card_w, 58)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 492), Vector2(card_w, 68)))
+			# ============================================================
+			# VILLAGE REQUESTS CARD BACKPLATES
+			# ------------------------------------------------------------
+			# These are the hand-drawn card backgrounds behind the real
+			# Godot Controls. Keep this in sync with the ORDERBOOK_* values
+			# and the market_panel layout above.
+			#
+			# Design note:
+			# Older passes drew separate boxes behind Customer / Order /
+			# Payout / Time. That made the selected request feel broken
+			# into chunks. This pass draws ONE hero card instead.
+			# ============================================================
+			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 46), Vector2(card_w, 62)))
+			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 122), Vector2(card_w, 168)))
+			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 306), Vector2(card_w, 44)))
+			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 382), Vector2(card_w, 176)))
 		2:
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, 92)))
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 162), Vector2(card_w, 78)))
@@ -1313,9 +1472,11 @@ func _draw_drawer_cards() -> void:
 			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, minf(470.0, content.size.y - 64.0))))
 
 
+
 func _draw_drawer_card(rect: Rect2) -> void:
 	draw_style_box(_rounded_box(Color(0.82, 0.65, 0.36, 0.12), Color(0.82, 0.65, 0.36, 0.0), 10), Rect2(rect.position + Vector2(1, 2), rect.size))
 	_draw_rounded_box(rect, Color("#fffaf0"), Color("#ead6aa"), 10, 1)
+
 
 
 func _draw_top_hud_bar() -> void:
@@ -1324,6 +1485,7 @@ func _draw_top_hud_bar() -> void:
 	_draw_rounded_box(rect, Color("#7a5229"), Color("#5b3a1d"), 12, 1)
 	_draw_rounded_box(rect.grow(-3), Color("#a9793a"), Color("#8b612e"), 9, 1)
 	_draw_rounded_box(rect.grow(-7), Color("#f4dfb4"), Color("#d4b16d"), 6, 1)
+
 
 
 func _draw_sidebar() -> void:
@@ -1335,6 +1497,7 @@ func _draw_sidebar() -> void:
 	_draw_rounded_box(_menu_pocket_rect(), Color(BG_CREAM), Color("#ead6aa"), 9, 1)
 	draw_line(_tool_pocket_rect().position + Vector2(10, 10), _tool_pocket_rect().position + Vector2(_tool_pocket_rect().size.x - 10, 10), Color(0.50, 0.36, 0.18, 0.20), 1.0)
 	draw_line(_menu_pocket_rect().position + Vector2(10, 10), _menu_pocket_rect().position + Vector2(_menu_pocket_rect().size.x - 10, 10), Color(0.50, 0.36, 0.18, 0.20), 1.0)
+
 
 
 func _draw_farm_board() -> void:
@@ -1351,11 +1514,13 @@ func _draw_farm_board() -> void:
 		draw_line(grass_pos, grass_pos + Vector2(6, -10), Color("#5c913f"), 2.0)
 
 
+
 func _draw_ui_panel(rect: Rect2) -> void:
 	draw_style_box(_rounded_box(Color(0.16, 0.10, 0.05, 0.18), Color(0.16, 0.10, 0.05, 0.0), 16), Rect2(rect.position + Vector2(3, 4), rect.size))
 	_draw_rounded_box(rect, Color("#7a5a35"), Color("#5b4228"), 16, 2)
 	_draw_rounded_box(rect.grow(-4), Color("#f0ddb5"), Color("#c9a96a"), 13, 1)
 	_draw_rounded_box(rect.grow(-14), Color("#fff8e8"), Color("#ead6aa"), 10, 1)
+
 
 
 func _draw_dialogue_popup() -> void:
@@ -1369,6 +1534,7 @@ func _draw_dialogue_popup() -> void:
 	draw_line(Vector2(416, 250), Vector2(862, 250), Color(0.50, 0.36, 0.18, 0.22), 1.5)
 
 
+
 func _draw_message_toast() -> void:
 	if message_timer <= 0.0:
 		return
@@ -1376,6 +1542,7 @@ func _draw_message_toast() -> void:
 	draw_style_box(_rounded_box(Color(0.16, 0.10, 0.05, 0.18), Color(0.16, 0.10, 0.05, 0.0), 10), Rect2(rect.position + Vector2(2, 3), rect.size))
 	_draw_rounded_box(rect, Color("#d7bd78"), Color("#6a4d2e"), 10, 1)
 	_draw_rounded_box(rect.grow(-7), Color("#fff9e9"), Color("#e8d29d"), 6, 1)
+
 
 
 func _draw_pause_overlay() -> void:
@@ -1389,6 +1556,7 @@ func _draw_pause_overlay() -> void:
 	draw_rect(rect, Color("#4f3722"), false, 3.0)
 
 
+
 func _draw_bottom_status_bar() -> void:
 	var rect: Rect2 = _bottom_status_rect()
 	draw_style_box(_rounded_box(Color(0.16, 0.10, 0.05, 0.18), Color(0.16, 0.10, 0.05, 0.0), 14), Rect2(rect.position + Vector2(3, 4), rect.size))
@@ -1398,6 +1566,7 @@ func _draw_bottom_status_bar() -> void:
 	var plot_rect: Rect2 = _bottom_card_rect(1)
 	_draw_rounded_box(action_rect, Color("#fffdf2"), Color("#d8c78e"), 8, 1)
 	_draw_rounded_box(plot_rect, Color("#fffdf2"), Color("#d8c78e"), 8, 1)
+
 
 
 func _draw_farm() -> void:
@@ -1432,6 +1601,7 @@ func _draw_farm() -> void:
 				_draw_rounded_box(rect.grow(8), Color(1.0, 1.0, 1.0, 0.0), Color("#fff6c7"), 12, 2)
 
 
+
 func _draw_plot_state_markers(rect: Rect2, plot: Dictionary) -> void:
 	if not bool(plot.get("planted", false)):
 		return
@@ -1454,10 +1624,12 @@ func _draw_plot_state_markers(rect: Rect2, plot: Dictionary) -> void:
 			_draw_peak_sparkles(rect.position + rect.size * 0.5)
 
 
+
 func _draw_variety_tag(rect: Rect2, variety_index: int) -> void:
 	var marker_color: Color = _variety_marker_color(variety_index)
 	var marker_rect: Rect2 = Rect2(rect.end - Vector2(18, 18), Vector2(12, 12))
 	_draw_rounded_box(marker_rect, marker_color, Color("#2a1d14"), 3, 1)
+
 
 
 func _variety_marker_color(variety_index: int) -> Color:
@@ -1473,9 +1645,11 @@ func _variety_marker_color(variety_index: int) -> Color:
 	return Color("#ffffff")
 
 
+
 func _draw_water_drop(pos: Vector2) -> void:
 	draw_circle(pos + Vector2(0, 3), 4, Color("#5ca4d8"))
 	draw_colored_polygon([pos + Vector2(0, -6), pos + Vector2(-4, 2), pos + Vector2(4, 2)], Color("#5ca4d8"))
+
 
 
 func _draw_peak_sparkles(center: Vector2) -> void:
@@ -1485,11 +1659,13 @@ func _draw_peak_sparkles(center: Vector2) -> void:
 		draw_line(p + Vector2(0, -4), p + Vector2(0, 4), Color("#fff07a"), 2.0)
 
 
+
 func _draw_dry_cracks(rect: Rect2) -> void:
 	for i in 3:
 		var start: Vector2 = rect.position + Vector2(16 + i * 17, 18 + (i % 2) * 18)
 		draw_line(start, start + Vector2(10, 5), Color(0.28, 0.16, 0.09, 0.55), 2.0)
 		draw_line(start + Vector2(10, 5), start + Vector2(16, 1), Color(0.28, 0.16, 0.09, 0.55), 1.5)
+
 
 
 func _draw_plot_texture(rect: Rect2) -> void:
@@ -1498,10 +1674,12 @@ func _draw_plot_texture(rect: Rect2) -> void:
 		draw_line(Vector2(rect.position.x + 12.0, y), Vector2(rect.end.x - 14.0, y + 2.0), Color(0.31, 0.18, 0.10, 0.45), 1.5)
 
 
+
 func _draw_compost_specks(rect: Rect2) -> void:
 	for i in 4:
 		var dot: Vector2 = rect.position + Vector2(14 + i * 13, rect.size.y - 18 - (i % 2) * 11)
 		draw_circle(dot, 3, Color("#d3b65b"))
+
 
 
 func _draw_plot_plant(rect: Rect2, plot: Dictionary) -> void:
@@ -1532,6 +1710,7 @@ func _draw_plot_plant(rect: Rect2, plot: Dictionary) -> void:
 		draw_circle(clip_pos + Vector2(5, -5), 4, Color("#8fcf5b"))
 
 
+
 func _crop_texture_for_plot(plot: Dictionary) -> Texture2D:
 	var stage: int = int(plot.get("stage", 0))
 	var variety_index: int = int(plot.get("variety", 0))
@@ -1554,6 +1733,7 @@ func _crop_texture_for_plot(plot: Dictionary) -> Texture2D:
 	return _texture_from(crop_textures, "growing")
 
 
+
 func _draw_bee_icon(pos: Vector2, scale: float = 1.0) -> void:
 	draw_circle(pos + Vector2(-5, -5) * scale, 5.0 * scale, Color(1.0, 1.0, 1.0, 0.55))
 	draw_circle(pos + Vector2(5, -5) * scale, 5.0 * scale, Color(1.0, 1.0, 1.0, 0.55))
@@ -1562,6 +1742,7 @@ func _draw_bee_icon(pos: Vector2, scale: float = 1.0) -> void:
 	draw_line(pos + Vector2(-3, -4) * scale, pos + Vector2(-3, 6) * scale, Color("#5d3b18"), 2.0 * scale)
 	draw_line(pos + Vector2(3, -4) * scale, pos + Vector2(3, 6) * scale, Color("#5d3b18"), 2.0 * scale)
 	draw_circle(pos + Vector2(9, 1) * scale, 3.0 * scale, Color("#2c1a14"))
+
 
 
 func _draw_side_scene() -> void:
@@ -1582,6 +1763,7 @@ func _draw_side_scene() -> void:
 			_draw_bee_icon(Vector2(board.position.x + 84.0 + float(i) * 118.0, board.position.y + 28.0 + float(i % 2) * 30.0), 0.82)
 
 
+
 func _current_tool_is_usable() -> bool:
 	var plot: Dictionary = plots[farmer_cell.y][farmer_cell.x]
 	match current_tool:
@@ -1596,6 +1778,7 @@ func _current_tool_is_usable() -> bool:
 	return false
 
 
+
 func _draw_farmer_tool_icon(pos: Vector2) -> void:
 	draw_circle(pos, 12, Color("#fff6df"))
 	draw_circle(pos, 12, Color("#4f3722"), false, 2.0)
@@ -1604,6 +1787,7 @@ func _draw_farmer_tool_icon(pos: Vector2) -> void:
 		_draw_texture_centered(texture, pos, Vector2(23, 23))
 		return
 	draw_circle(pos, 5, Color("#5d7f35"))
+
 
 
 func _draw_farm_props() -> void:
@@ -1623,6 +1807,7 @@ func _draw_farm_props() -> void:
 		draw_line(sign_rect.position + Vector2(8, 11), sign_rect.position + Vector2(sign_rect.size.x - 8, 11), Color("#754521"), 2.0)
 		draw_line(sign_rect.position + Vector2(8, 23), sign_rect.position + Vector2(sign_rect.size.x - 8, 23), Color("#754521"), 2.0)
 	draw_line(Vector2(204, 570), Vector2(832, 570), Color("#d4b16d"), 8.0)
+
 
 
 func _draw_farmer() -> void:
@@ -1645,6 +1830,7 @@ func _draw_farmer() -> void:
 		_draw_farmer_tool_icon(base + Vector2(27, -18))
 
 
+
 func _move_farmer(delta_cell: Vector2i) -> void:
 	var next_cell: Vector2i = farmer_cell + delta_cell
 	if not _is_cell_inside(next_cell):
@@ -1654,9 +1840,11 @@ func _move_farmer(delta_cell: Vector2i) -> void:
 	_mark_ui_dirty()
 
 
+
 func _use_farmer_tool() -> void:
 	selected_cell = farmer_cell
 	_handle_plot_click(farmer_cell)
+
 
 
 func _info_cell() -> Vector2i:
@@ -1665,14 +1853,17 @@ func _info_cell() -> Vector2i:
 	return farmer_cell
 
 
+
 func _info_cell_label(cell: Vector2i) -> String:
 	if cell == farmer_cell:
 		return "Current plot"
 	return "Hover plot"
 
 
+
 func _cell_center(cell: Vector2i) -> Vector2:
 	return farm_origin + Vector2(cell.x * tile_size + (tile_size - 8) * 0.5, cell.y * tile_size + (tile_size - 8) * 0.5)
+
 
 
 func _handle_plot_click(cell: Vector2i) -> void:
@@ -1688,22 +1879,23 @@ func _handle_plot_click(cell: Vector2i) -> void:
 			_harvest_plot(plot)
 
 
+
 func _take_cutting_from_farmer_plot() -> void:
 	var plot: Dictionary = plots[farmer_cell.y][farmer_cell.x]
-	if not bool(plot["planted"]):
-		_say("Cuttings come from living fig wood. Plant a tree here first.")
+	var result: Dictionary = CropSystem.take_cutting(plot, varieties)
+
+	if not bool(result["ok"]):
+		match String(result["reason"]):
+			"empty":
+				_say("Cuttings come from living fig wood. Plant a tree here first.")
+			"young":
+				_say("This fig is too young for cuttings. Let it establish or ripen first.")
+			_:
+				_say("This fig is not ready for cuttings yet.")
 		return
-	if not _can_take_cutting(plot):
-		_say("This fig is too young for cuttings. Let it establish or ripen first.")
-		return
-	var variety_index: int = int(plot["variety"])
+
+	var variety_index: int = int(result["variety_index"])
 	cuttings[variety_index] += 1
-	plot["progress"] = maxi(0, int(plot["progress"]) - 1)
-	var grow_days: int = int(varieties[variety_index]["grow_days"])
-	var recalculated_stage: int = mini(3, int(floor((float(int(plot["progress"])) / float(grow_days)) * 3.0)))
-	plot["stage"] = maxi(2, recalculated_stage)
-	plot["ripe_days"] = 0
-	plot["bonus"] = false
 	_play_sfx("harvest")
 	_say("Clipped one %s cutting. Fig cultivars are usually propagated by cuttings, which clone the parent tree." % _variety_name(variety_index))
 
@@ -1711,27 +1903,20 @@ func _take_cutting_from_farmer_plot() -> void:
 func _can_take_cutting(plot: Dictionary) -> bool:
 	return CropSystem.can_take_cutting(plot, varieties)
 
+
 func _plant_plot(plot: Dictionary) -> void:
-	if bool(plot["planted"]):
-		_say("That plot already has a fig tree.")
+	var result: Dictionary = CropSystem.plant_plot(plot, cuttings, selected_variety, _is_rainy())
+
+	if not bool(result["ok"]):
+		match String(result["reason"]):
+			"occupied":
+				_say("That plot already has a fig tree.")
+			"no_cuttings":
+				_say("No %s cuttings left. Buy more from the shop." % _variety_name(selected_variety))
+			_:
+				_say("That plot is not ready to plant.")
 		return
-	if cuttings[selected_variety] <= 0:
-		_say("No %s cuttings left. Buy more from the shop." % _variety_name(selected_variety))
-		return
-	cuttings[selected_variety] -= 1
-	plot["planted"] = true
-	plot["variety"] = selected_variety
-	plot["stage"] = 0
-	plot["progress"] = 0
-	plot["watered"] = _is_rainy()
-	plot["moisture"] = 1
-	if _is_rainy():
-		plot["moisture"] = 2
-	plot["quality"] = 1
-	plot["bonus"] = false
-	plot["composted"] = false
-	plot["ripe_days"] = 0
-	plot["harvested_marker"] = false
+
 	if selected_variety == 0:
 		_advance_tutorial(0)
 	_play_sfx("plant")
@@ -1739,71 +1924,66 @@ func _plant_plot(plot: Dictionary) -> void:
 
 
 func _water_plot(plot: Dictionary) -> void:
-	if not bool(plot["planted"]):
-		_say("Water helps trees, but this soil is empty.")
+	var result: Dictionary = CropSystem.water_plot(plot, water, _pollinator_chance())
+
+	if not bool(result["ok"]):
+		match String(result["reason"]):
+			"empty":
+				_say("Water helps trees, but this soil is empty.")
+			"already_watered":
+				_say("This tree is already watered. Deep, steady watering matters most while young or fruiting.")
+			"no_water":
+				_say("The barrel is empty. A dry day slows growth, and heat can lower fig quality.")
+			_:
+				_say("This tree cannot be watered right now.")
 		return
-	if bool(plot["watered"]):
-		_say("This tree is already watered. Deep, steady watering matters most while young or fruiting.")
-		return
-	if water <= 0:
-		_say("The barrel is empty. A dry day slows growth, and heat can lower fig quality.")
-		return
-	water -= 1
-	plot["watered"] = true
-	plot["moisture"] = 2
-	plot["quality"] = int(plot["quality"]) + 1
+
+	water = int(result["water"])
 	_advance_tutorial(1)
 	_play_sfx("water")
-	if randf() < _pollinator_chance():
-		plot["bonus"] = true
+	if bool(result["pollinator_visit"]):
 		_say("A pollinator visit marked this tree for extra sweet figs.")
 	else:
 		_say("The tree drinks deeply. Watered days move it closer to fruit.")
 
 
 func _compost_plot(plot: Dictionary) -> void:
-	if not bool(plot["planted"]):
-		_say("Compost works best around planted trees.")
+	var result: Dictionary = CropSystem.compost_plot(plot, compost)
+
+	if not bool(result["ok"]):
+		match String(result["reason"]):
+			"empty":
+				_say("Compost works best around planted trees.")
+			"already_composted":
+				_say("This tree already has compost around its roots.")
+			"no_compost":
+				_say("No compost left. Buy a bag from the shop.")
+			_:
+				_say("This tree cannot use compost right now.")
 		return
-	if bool(plot["composted"]):
-		_say("This tree already has compost around its roots.")
-		return
-	if compost <= 0:
-		_say("No compost left. Buy a bag from the shop.")
-		return
-	compost -= 1
-	plot["composted"] = true
-	plot["quality"] = int(plot["quality"]) + 2
+
+	compost = int(result["compost"])
 	_play_sfx("compost")
 	_say("Compost added. This tree should give better figs.")
 
 
 func _harvest_plot(plot: Dictionary) -> void:
-	if not bool(plot["planted"]):
-		_say("Nothing to harvest here yet.")
+	var result: Dictionary = CropSystem.harvest_plot(plot, varieties)
+
+	if not bool(result["ok"]):
+		match String(result["reason"]):
+			"empty":
+				_say("Nothing to harvest here yet.")
+			"not_ripe":
+				_say("These figs need more time. Figs sweeten on the tree and should be picked soft and ripe.")
+			_:
+				_say("These figs are not ready to harvest yet.")
 		return
-	if int(plot["stage"]) < 3:
-		_say("These figs need more time. Figs sweeten on the tree and should be picked soft and ripe.")
-		return
-	var variety_index: int = int(plot["variety"])
-	var ripe_days: int = int(plot.get("ripe_days", 0))
-	var ripeness_bonus: int = _ripeness_yield_bonus(ripe_days)
-	var harvest: int = maxi(1, 2 + int(plot["quality"]) + int(varieties[variety_index]["yield_bonus"]) + ripeness_bonus)
-	if bool(plot["bonus"]):
-		harvest += 2
-	if bool(plot["composted"]):
-		harvest += 1
+
+	var variety_index: int = int(result["variety_index"])
+	var harvest: int = int(result["harvest"])
+	var ripe_days: int = int(result["ripe_days"])
 	fig_bins[variety_index] += harvest
-	plot["planted"] = false
-	plot["stage"] = 0
-	plot["progress"] = 0
-	plot["watered"] = false
-	plot["moisture"] = 0
-	plot["quality"] = 1
-	plot["bonus"] = false
-	plot["composted"] = false
-	plot["ripe_days"] = 0
-	plot["harvested_marker"] = true
 	_advance_tutorial(3)
 	_play_sfx("harvest")
 	_say("Harvested %s %s figs. %s" % [harvest, _variety_name(variety_index), _ripeness_harvest_note(ripe_days)])
@@ -1812,60 +1992,56 @@ func _harvest_plot(plot: Dictionary) -> void:
 func _start_next_day() -> void:
 	day += 1
 	time_left = DAY_LENGTH
+
 	_play_sfx("day")
 	_roll_weather()
+
 	water = mini(_max_water(), water + 4 + barrel_level)
+
 	var weather_name: String = _weather_name()
-	var grew_count: int = 0
-	var dried_count: int = 0
-	var ripened_count: int = 0
-	var softened_count: int = 0
 	var order_tick_count: int = accepted_orders.size()
-	for y in GRID_H:
-		for x in GRID_W:
-			var plot: Dictionary = plots[y][x]
-			if not bool(plot.get("planted", false)):
-				plot["harvested_marker"] = false
-			if bool(plot["planted"]):
-				var old_progress: int = int(plot.get("progress", 0))
-				var old_stage: int = int(plot.get("stage", 0))
-				var old_moisture: int = int(plot.get("moisture", 0))
-				var old_ripe_days: int = int(plot.get("ripe_days", 0))
-				if weather_name == "Rain":
-					plot["watered"] = true
-					plot["moisture"] = 2
-					old_moisture = mini(old_moisture, 1)
-				_advance_tree(plot)
-				_update_plot_moisture(plot, weather_name)
-				if int(plot.get("progress", 0)) > old_progress:
-					grew_count += 1
-				if int(plot.get("moisture", 0)) < old_moisture:
-					dried_count += 1
-				if old_stage < 3 and int(plot.get("stage", 0)) >= 3:
-					ripened_count += 1
-				elif int(plot.get("stage", 0)) >= 3 and int(plot.get("ripe_days", 0)) > old_ripe_days:
-					softened_count += 1
-				plot["watered"] = false
+
+	var crop_day_result: Dictionary = CropSystem.process_new_day_for_plots(
+		plots,
+		GRID_H,
+		GRID_W,
+		varieties,
+		weather_name
+	)
+
 	var expired_orders: Array[String] = _order_day_passed()
+
 	if _has_ripe_tree():
 		_advance_tutorial(2)
+
 	var extra_note: String = ""
+
 	if randf() < 0.22:
 		var free_index: int = randi_range(0, varieties.size() - 1)
 		cuttings[free_index] += 1
 		extra_note = "Neighbor shared %s." % _variety_name(free_index)
-	var summary_text: String = _day_summary_text(grew_count, dried_count, ripened_count, softened_count, order_tick_count, expired_orders.size(), weather_name, extra_note)
+
+	var summary_text: String = _day_summary_text(
+		int(crop_day_result["grew_count"]),
+		int(crop_day_result["dried_count"]),
+		int(crop_day_result["ripened_count"]),
+		int(crop_day_result["softened_count"]),
+		order_tick_count,
+		expired_orders.size(),
+		weather_name,
+		extra_note
+	)
+
 	if (day - 1) % FESTIVAL_LENGTH == 0:
 		_resolve_festival_week(weather_name, summary_text)
 		return
-	_say(summary_text)
 
+	_say(summary_text)
 
 func _update_plot_moisture(plot: Dictionary, weather_name: String) -> void:
 	CropSystem.update_plot_moisture(plot, weather_name)
 
-func _advance_tree(plot: Dictionary) -> void:
-	CropSystem.advance_tree(plot, varieties, _weather_name())
+
 
 func _fulfill_order() -> void:
 	if not _selected_order_is_accepted():
@@ -1911,46 +2087,54 @@ func _fulfill_order() -> void:
 	_say(complete_message)
 
 
+
 func _make_jam() -> void:
-	var needed_figs: int = 5
-	if _total_figs() < needed_figs:
-		_say("Jam needs 5 figs. Save mixed ripe figs, then preserve them.")
+	var result: Dictionary = InventorySystem.make_jam(fig_bins, mason_jars, jam_jars)
+
+	if not bool(result["ok"]):
+		match String(result["reason"]):
+			"not_enough_figs":
+				_say("Jam needs 5 figs. Save mixed ripe figs, then preserve them.")
+			"no_jars":
+				_say("Jam needs an empty mason jar. Buy jars at the market first.")
+			_:
+				_say("Jam needs figs and a clean jar.")
 		return
-	if mason_jars <= 0:
-		_say("Jam needs an empty mason jar. Buy jars at the market first.")
-		return
-	_take_any_figs(needed_figs)
-	mason_jars -= 1
-	jam_jars += 1
+
+	mason_jars = int(result["mason_jars"])
+	jam_jars = int(result["jam_jars"])
 	_log_event("Made jam: 5 figs became 1 jar.")
 	_play_sfx("order")
 	_say("Made 1 jar of fig jam: ripe figs, sugar, lemon juice, then simmer until thick.")
 
-
 func _sell_jam() -> void:
-	if jam_jars <= 0:
+	var result: Dictionary = InventorySystem.sell_jam(jam_jars)
+
+	if not bool(result["ok"]):
 		_say("No jam jars ready to sell.")
 		return
-	var sold_jars: int = jam_jars
-	var payout: int = sold_jars * 18
-	var festival_credit: int = sold_jars * 5
+
+	var sold_jars: int = int(result["sold_jars"])
+	var payout: int = int(result["payout"])
+	var festival_credit: int = int(result["festival_credit"])
+	jam_jars = int(result["jam_jars"])
 	coins += payout
 	festival_progress += festival_credit
 	_log_event("Sold jam: +$%s, weekly table +%s figs." % [payout, festival_credit])
 	_play_sfx("sell")
 	_say("Sold %s of fig jam for %s coins. Weekly table +%s figs." % [_jar_count_text(sold_jars), payout, festival_credit])
-	jam_jars = 0
-
 
 func _buy_mason_jars() -> void:
-	if coins < 6:
+	var result: Dictionary = InventorySystem.buy_mason_jars(coins, mason_jars)
+
+	if not bool(result["ok"]):
 		_say("Three clean mason jars cost 6 coins.")
 		return
-	coins -= 6
-	mason_jars += 3
+
+	coins = int(result["coins"])
+	mason_jars = int(result["mason_jars"])
 	_play_sfx("sell")
 	_say("Bought three mason jars for preserves.")
-
 
 func _show_recipe() -> void:
 	recipe_expanded = true
@@ -1958,24 +2142,25 @@ func _show_recipe() -> void:
 	_update_ui()
 
 
+
 func _sell_crate() -> void:
-	var total: int = _total_figs()
-	if total <= 0:
+	var result: Dictionary = InventorySystem.sell_crate(fig_bins, varieties)
+
+	if not bool(result["ok"]):
 		_say("No harvested figs to sell yet.")
 		return
-	var payout: int = 0
-	for i in fig_bins.size():
-		payout += fig_bins[i] * int(varieties[i]["value"])
-		fig_bins[i] = 0
+
+	var total: int = int(result["total"])
+	var payout: int = int(result["payout"])
 	coins += payout
 	festival_progress += total
 	_log_event("Sold crate: +$%s, weekly table +%s figs." % [payout, total])
 	_play_sfx("sell")
 	_say("Sold a mixed crate for %s coins. Weekly table +%s figs." % [payout, total])
 
-
 func _make_order_offer() -> Dictionary:
 	return OrderSystem.make_order_offer(GameData.order_templates(), reputation, relationships)
+
 
 func _refresh_order_offers() -> void:
 	order_offers.clear()
@@ -1990,23 +2175,20 @@ func _refresh_order_offers() -> void:
 	_normalize_selected_order()
 
 
+
 func _new_order() -> void:
 	_refresh_order_offers()
 
 
+
 func _order_day_passed() -> Array[String]:
-	var kept_orders: Array[Dictionary] = []
+	var result: Dictionary = OrderSystem.process_order_day(accepted_orders, relationships, reputation)
+	accepted_orders = result["accepted_orders"]
+	reputation = int(result["reputation"])
 	var expired_names: Array[String] = []
-	for order_data in accepted_orders:
-		order_data["patience"] = int(order_data["patience"]) - 1
-		if int(order_data["patience"]) <= 0:
-			var customer: String = String(order_data["customer"])
-			reputation = maxi(0, reputation - 1)
-			relationships[customer] = maxi(0, int(relationships.get(customer, 0)) - 1)
-			expired_names.append(_short_customer_name(customer))
-		else:
-			kept_orders.append(order_data)
-	accepted_orders = kept_orders
+	for expired_name in result["expired_names"]:
+		expired_names.append(String(expired_name))
+
 	_refresh_order_offers()
 	if expired_names.size() > 0:
 		_log_event("Expired accepted order: %s. Trust dipped." % ", ".join(expired_names))
@@ -2024,6 +2206,7 @@ func _buy_cuttings() -> void:
 	_say("Bought one %s starter tree for planting." % _variety_name(selected_variety))
 
 
+
 func _buy_compost() -> void:
 	if coins < 7:
 		_say("A compost bag costs 7 coins.")
@@ -2032,6 +2215,7 @@ func _buy_compost() -> void:
 	compost += 2
 	_play_sfx("sell")
 	_say("Bought two compost bags.")
+
 
 
 func _buy_barrel_upgrade() -> void:
@@ -2049,6 +2233,7 @@ func _buy_barrel_upgrade() -> void:
 	_say("Barrel upgraded. More water fits now.")
 
 
+
 func _buy_pollinator_garden() -> void:
 	if pollinator_garden:
 		_say("The pollinator garden is already blooming.")
@@ -2062,47 +2247,22 @@ func _buy_pollinator_garden() -> void:
 	_say("Flowers planted by the fence. Sweet harvests are more likely.")
 
 
+
+# ============================================================
+# Saves the current farm to disk.
+# ============================================================
+
 func _save_game() -> void:
-	var data: Dictionary = {
-		"version": 1,
-		"day": day,
-		"time_left": time_left,
-		"coins": coins,
-		"water": water,
-		"compost": compost,
-		"reputation": reputation,
-		"sound_enabled": sound_enabled,
-		"tutorial_index": tutorial_index,
-		"festival_week": festival_week,
-		"festival_goal": festival_goal,
-		"festival_progress": festival_progress,
-		"relationships": relationships,
-		"cuttings": cuttings,
-		"fig_bins": fig_bins,
-		"jam_jars": jam_jars,
-		"mason_jars": mason_jars,
-		"recipe_expanded": recipe_expanded,
-		"barrel_level": barrel_level,
-		"pollinator_garden": pollinator_garden,
-		"current_weather": current_weather,
-		"temperature_f": temperature_f,
-		"order_offers": order_offers,
-		"accepted_orders": accepted_orders,
-		"selected_order_index": selected_order_index,
-		"game_log": game_log,
-		"selected_variety": selected_variety,
-		"current_tool": current_tool,
-		"side_tab": side_tab,
-		"panel_open": panel_open,
-		"farmer_x": farmer_cell.x,
-		"farmer_y": farmer_cell.y,
-		"plots": plots
-	}
+	var data: Dictionary = SaveSystem.build_save_data(_current_save_state())
+
 	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+
 	if file == null:
 		_say("Could not save the farm right now.")
 		return
+
 	file.store_string(JSON.stringify(data))
+
 	_play_sfx("save")
 	_say("Farm saved. You can come back to this fig season later.")
 
@@ -2111,86 +2271,170 @@ func _load_game() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
 		_say("No saved farm found yet.")
 		return
+
 	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.READ)
+
 	if file == null:
 		_say("Could not open the saved farm.")
 		return
+
 	var parsed: Variant = JSON.parse_string(file.get_as_text())
+
 	if typeof(parsed) != TYPE_DICTIONARY:
 		_say("That save file could not be read.")
 		return
+
 	var data: Dictionary = parsed as Dictionary
-	day = int(data.get("day", day))
-	time_left = float(data.get("time_left", DAY_LENGTH))
-	coins = int(data.get("coins", coins))
-	water = int(data.get("water", water))
-	compost = int(data.get("compost", compost))
-	reputation = int(data.get("reputation", reputation))
-	sound_enabled = bool(data.get("sound_enabled", sound_enabled))
+
+	var loaded: Dictionary = SaveSystem.read_save_data(
+		data,
+		_current_save_state(),
+		varieties.size(),
+		weather_table.size(),
+		GRID_W,
+		GRID_H,
+		DAY_LENGTH,
+		_festival_goal_for_week()
+	)
+
+	# ---------- Apply loaded state ----------
+	day = loaded["day"]
+	time_left = loaded["time_left"]
+	coins = loaded["coins"]
+	water = loaded["water"]
+	compost = loaded["compost"]
+	reputation = loaded["reputation"]
+
+	sound_enabled = loaded["sound_enabled"]
 	_sync_music()
-	tutorial_index = clampi(int(data.get("tutorial_index", tutorial_index)), 0, 5)
-	festival_week = int(data.get("festival_week", festival_week))
-	festival_goal = mini(int(data.get("festival_goal", festival_goal)), _festival_goal_for_week())
-	festival_progress = int(data.get("festival_progress", festival_progress))
-	var loaded_relationships: Variant = data.get("relationships", relationships)
-	if typeof(loaded_relationships) == TYPE_DICTIONARY:
-		relationships = loaded_relationships as Dictionary
-	cuttings = _read_int_array(data.get("cuttings", cuttings), varieties.size(), 0)
-	fig_bins = _read_int_array(data.get("fig_bins", fig_bins), varieties.size(), 0)
-	jam_jars = int(data.get("jam_jars", jam_jars))
-	mason_jars = int(data.get("mason_jars", mason_jars))
-	recipe_expanded = bool(data.get("recipe_expanded", recipe_expanded))
-	barrel_level = int(data.get("barrel_level", barrel_level))
-	pollinator_garden = bool(data.get("pollinator_garden", pollinator_garden))
-	current_weather = clampi(int(data.get("current_weather", current_weather)), 0, weather_table.size() - 1)
-	temperature_f = int(data.get("temperature_f", temperature_f))
-	order_offers = _read_order_array(data.get("order_offers", []))
-	accepted_orders = _read_order_array(data.get("accepted_orders", []))
-	if order_offers.is_empty() and accepted_orders.is_empty():
-		var legacy_order: Variant = data.get("order", {})
-		if typeof(legacy_order) == TYPE_DICTIONARY:
-			var legacy_dict: Dictionary = legacy_order as Dictionary
-			if not legacy_dict.is_empty():
-				legacy_dict["accepted"] = false
-				order_offers.append(legacy_dict)
-	selected_order_index = int(data.get("selected_order_index", selected_order_index))
-	game_log = _read_string_array(data.get("game_log", game_log), 8)
-	if order_offers.is_empty() and accepted_orders.is_empty():
-		_refresh_order_offers()
-	_normalize_selected_order()
-	selected_variety = clampi(int(data.get("selected_variety", selected_variety)), 0, varieties.size() - 1)
-	current_tool = clampi(int(data.get("current_tool", current_tool)), Tool.PLANT, Tool.HARVEST)
-	side_tab = clampi(int(data.get("side_tab", side_tab)), 0, 4)
-	panel_open = bool(data.get("panel_open", panel_open))
-	var loaded_plots: Variant = data.get("plots", plots)
-	var normalized_plots: Array = _read_plots_array(loaded_plots)
-	if not normalized_plots.is_empty():
-		plots = normalized_plots
-	farmer_cell = Vector2i(clampi(int(data.get("farmer_x", farmer_cell.x)), 0, GRID_W - 1), clampi(int(data.get("farmer_y", farmer_cell.y)), 0, GRID_H - 1))
+
+	tutorial_index = loaded["tutorial_index"]
+	festival_week = loaded["festival_week"]
+	festival_goal = loaded["festival_goal"]
+	festival_progress = loaded["festival_progress"]
+
+	relationships = loaded["relationships"]
+
+	cuttings = loaded["cuttings"]
+	fig_bins = loaded["fig_bins"]
+	jam_jars = loaded["jam_jars"]
+	mason_jars = loaded["mason_jars"]
+
+	recipe_expanded = loaded["recipe_expanded"]
+	barrel_level = loaded["barrel_level"]
+	pollinator_garden = loaded["pollinator_garden"]
+
+	current_weather = loaded["current_weather"]
+	temperature_f = loaded["temperature_f"]
+
+	order_offers = loaded["order_offers"]
+	accepted_orders = loaded["accepted_orders"]
+	selected_order_index = loaded["selected_order_index"]
+
+	game_log = loaded["game_log"]
+
+	selected_variety = loaded["selected_variety"]
+	current_tool = clampi(int(loaded["current_tool"]), Tool.PLANT, Tool.HARVEST)
+	side_tab = loaded["side_tab"]
+	panel_open = loaded["panel_open"]
+
+	if not loaded["plots"].is_empty():
+		plots = loaded["plots"]
+
+	farmer_cell = loaded["farmer_cell"]
 	selected_cell = farmer_cell
 	farmer_pos = _cell_center(farmer_cell)
+
+	# ---------- Post-load cleanup ----------
+	if order_offers.is_empty() and accepted_orders.is_empty():
+		_refresh_order_offers()
+
+	_normalize_selected_order()
 	_update_ui()
+
 	_play_sfx("save")
 	_say("Farm loaded. Back to the figs.")
+
+
+# ============================================================
+# Collects all current game state values that SaveSystem needs.
+#
+# Why this exists:
+# _save_game() and _load_game() both need the same state snapshot.
+# Keeping it here prevents huge duplicate Dictionaries everywhere.
+# ============================================================
+
+func _current_save_state() -> Dictionary:
+	return {
+		"day": day,
+		"time_left": time_left,
+
+		"coins": coins,
+		"water": water,
+		"compost": compost,
+		"reputation": reputation,
+
+		"sound_enabled": sound_enabled,
+		"tutorial_index": tutorial_index,
+
+		"festival_week": festival_week,
+		"festival_goal": festival_goal,
+		"festival_progress": festival_progress,
+
+		"relationships": relationships,
+
+		"cuttings": cuttings,
+		"fig_bins": fig_bins,
+		"jam_jars": jam_jars,
+		"mason_jars": mason_jars,
+
+		"recipe_expanded": recipe_expanded,
+		"barrel_level": barrel_level,
+		"pollinator_garden": pollinator_garden,
+
+		"current_weather": current_weather,
+		"temperature_f": temperature_f,
+
+		"order_offers": order_offers,
+		"accepted_orders": accepted_orders,
+		"selected_order_index": selected_order_index,
+
+		"game_log": game_log,
+
+		"selected_variety": selected_variety,
+		"current_tool": current_tool,
+		"side_tab": side_tab,
+		"panel_open": panel_open,
+
+		"plots": plots,
+		"farmer_cell": farmer_cell
+	}
+
 
 
 func _default_plot() -> Dictionary:
 	return SaveSystem.default_plot()
 
+
 func _normalize_plot(source: Variant) -> Dictionary:
 	return SaveSystem.normalize_plot(source, varieties.size())
+
 
 func _read_plots_array(source: Variant) -> Array:
 	return SaveSystem.read_plots_array(source, GRID_H, GRID_W, varieties.size())
 
+
 func _read_order_array(source: Variant) -> Array[Dictionary]:
 	return SaveSystem.read_order_array(source)
+
 
 func _read_string_array(source: Variant, max_items: int) -> Array[String]:
 	return SaveSystem.read_string_array(source, max_items)
 
+
 func _read_int_array(source: Variant, expected_size: int, fill_value: int) -> Array[int]:
 	return SaveSystem.read_int_array(source, expected_size, fill_value)
+
 
 func _toggle_sound() -> void:
 	sound_enabled = not sound_enabled
@@ -2203,6 +2447,7 @@ func _toggle_sound() -> void:
 	_update_ui()
 
 
+
 func _toggle_pause() -> void:
 	game_paused = not game_paused
 	_play_sfx("pause")
@@ -2213,9 +2458,11 @@ func _toggle_pause() -> void:
 	_update_ui()
 
 
+
 func _set_tool(tool: int) -> void:
 	current_tool = clampi(tool, Tool.PLANT, Tool.HARVEST)
 	_update_ui()
+
 
 
 func _select_variety(index: int) -> void:
@@ -2223,8 +2470,10 @@ func _select_variety(index: int) -> void:
 	_update_ui()
 
 
+
 func _mark_ui_dirty() -> void:
 	ui_dirty = true
+
 
 
 func _update_hud_labels() -> void:
@@ -2241,6 +2490,7 @@ func _update_hud_labels() -> void:
 	hud_labels["Guide"].text = "📖 " + _tutorial_short_text()
 
 
+
 func _update_transient_ui() -> void:
 	if message_label != null:
 		if message_timer > 0.0:
@@ -2251,6 +2501,7 @@ func _update_transient_ui() -> void:
 		dock_hint_label.visible = panel_open
 		if panel_open:
 			dock_hint_label.text = "%s  • click icon again to close" % _drawer_header_text()
+
 
 
 func _update_ui() -> void:
@@ -2292,9 +2543,20 @@ func _update_ui() -> void:
 	festival_label.text = _festival_text()
 	_update_order_buttons()
 	order_label.text = _order_text()
-	accept_order_button.disabled = not _can_accept_selected_order()
-	fulfill_order_button.disabled = not _can_fulfill_selected_order()
-	inventory_label.text = "Accepted orders: %s/5" % accepted_orders.size()
+
+	# Village Requests action state:
+	# Only show one primary action at a time, like a delivery/order app.
+	# - New offer selected: ACCEPT ORDER
+	# - Accepted order selected: FULFILL ORDER
+	# - Nothing actionable: hide/disable both
+	var can_accept_order: bool = _can_accept_selected_order()
+	var can_fulfill_order: bool = _can_fulfill_selected_order()
+	accept_order_button.visible = can_accept_order
+	fulfill_order_button.visible = can_fulfill_order
+	accept_order_button.disabled = not can_accept_order
+	fulfill_order_button.disabled = not can_fulfill_order
+
+	inventory_label.text = "Accepted requests: %s/5" % accepted_orders.size()
 	pantry_figs_label.text = _pantry_figs_text()
 	pantry_cuttings_label.text = _pantry_cuttings_text()
 	pantry_preserves_label.text = _pantry_preserves_text()
@@ -2329,8 +2591,10 @@ func _update_ui() -> void:
 	ui_dirty = false
 
 
+
 func _how_to_play_text() -> String:
 	return TextLibrary.how_to_play_text()
+
 
 func _log_event(entry: String) -> void:
 	var stamped_entry: String = "D%s  %s" % [day, entry]
@@ -2341,14 +2605,18 @@ func _log_event(entry: String) -> void:
 		game_log.pop_back()
 
 
+
 func _logbook_text() -> String:
 	return TextLibrary.logbook_text(game_log)
+
 
 func _tutorial_text() -> String:
 	return TextLibrary.tutorial_text(tutorial_index)
 
+
 func _tutorial_short_text() -> String:
 	return TextLibrary.tutorial_short_text(tutorial_index)
+
 
 func _advance_tutorial(step: int) -> void:
 	if tutorial_index != step:
@@ -2360,20 +2628,22 @@ func _advance_tutorial(step: int) -> void:
 		_say("Tutorial complete. Bonus: 12 coins and compost for the next planting.")
 
 
+
 func _has_ripe_tree() -> bool:
 	return CropSystem.has_ripe_tree(plots, GRID_H, GRID_W)
 
-func _ripeness_yield_bonus(ripe_days: int) -> int:
-	return TextLibrary.ripeness_yield_bonus(ripe_days)
 
 func _ripeness_label(ripe_days: int) -> String:
 	return TextLibrary.ripeness_label(ripe_days)
 
+
 func _ripeness_harvest_note(ripe_days: int) -> String:
 	return TextLibrary.ripeness_harvest_note(ripe_days)
 
+
 func _guide_legend_text() -> String:
 	return TextLibrary.guide_legend_text(_season_name(), temperature_f, _season_growing_note(), recipe_expanded)
+
 
 func _farm_hint_text() -> String:
 	var hint: String = "%s: %s" % [_tool_name(current_tool), _tool_block_reason()]
@@ -2382,14 +2652,18 @@ func _farm_hint_text() -> String:
 	return hint
 
 
+
 func _day_summary_text(grew_count: int, dried_count: int, ripened_count: int, softened_count: int, order_tick_count: int, expired_order_count: int, weather_name: String, extra_note: String) -> String:
 	return TextLibrary.day_summary_text(day, _weather_icon(), grew_count, dried_count, ripened_count, softened_count, order_tick_count, expired_order_count, weather_name, extra_note)
+
 
 func _progress_bar(current: int, maximum: int, width: int = 5) -> String:
 	return TextLibrary.progress_bar(current, maximum, width)
 
+
 func _moisture_icon(moisture: int) -> String:
 	return TextLibrary.moisture_icon(moisture)
+
 
 func _bottom_action_text() -> String:
 	var tool_name: String = _tool_name(current_tool)
@@ -2404,6 +2678,7 @@ func _bottom_action_text() -> String:
 			Tool.HARVEST:
 				return "%s %s\nPick ripe figs with F or click" % [_tool_icon(current_tool), tool_name]
 	return "%s %s\n%s" % [_tool_icon(current_tool), tool_name, _tool_block_reason()]
+
 
 
 func _plot_card_summary_text() -> String:
@@ -2431,40 +2706,52 @@ func _plot_card_summary_text() -> String:
 	return "%s: %s tree\n%s, %s left\nGrowth %s" % [title, String(variety["short"]), moisture_text, _day_count_text(days_left), _progress_bar(progress, grow_days)]
 
 
+
 func _tool_icon(tool: int) -> String:
 	return TextLibrary.tool_icon(tool)
+
 
 func _tool_shortcut(tool: int) -> String:
 	return TextLibrary.tool_shortcut(tool)
 
+
 func _drawer_header_text() -> String:
 	return TextLibrary.drawer_header_text(side_tab)
+
 
 func _tool_name(tool: int) -> String:
 	return TextLibrary.tool_name(tool)
 
+
 func _pantry_figs_text() -> String:
 	return InventorySystem.pantry_figs_text(varieties, fig_bins)
+
 
 func _pantry_cuttings_text() -> String:
 	return InventorySystem.pantry_cuttings_text(varieties, cuttings)
 
+
 func _pantry_preserves_text() -> String:
 	return InventorySystem.pantry_preserves_text(_total_figs(), mason_jars, jam_jars)
+
 
 func _pantry_trees_text() -> String:
 	return InventorySystem.pantry_trees_text(varieties, plots, cuttings, GRID_H, GRID_W)
 
+
 func _pantry_hint_text() -> String:
 	return InventorySystem.pantry_hint_text()
+
 
 func _notebook_text() -> String:
 	var variety: Dictionary = varieties[selected_variety]
 	return "Cultivar: %s\n%s" % [String(variety["short"]), String(variety["lesson"])]
 
 
+
 func _moisture_label(moisture: int) -> String:
 	return TextLibrary.moisture_label(moisture)
+
 
 func _show_dialogue(title: String, body: String) -> void:
 	dialogue_title = title
@@ -2474,9 +2761,11 @@ func _show_dialogue(title: String, body: String) -> void:
 	_play_sfx("save")
 
 
+
 func _close_dialogue() -> void:
 	dialogue_visible = false
 	_update_ui()
+
 
 
 func _plot_dialogue_title() -> String:
@@ -2487,12 +2776,15 @@ func _plot_dialogue_title() -> String:
 	return "%s Tree" % String(varieties[variety_index]["short"])
 
 
+
 func _recipe_card_text() -> String:
 	return TextLibrary.recipe_card_text()
+
 
 func _show_plot_info() -> void:
 	_show_dialogue(_plot_dialogue_title(), _plot_info_text())
 	_update_ui()
+
 
 
 func _plot_info_text() -> String:
@@ -2510,11 +2802,14 @@ func _plot_info_text() -> String:
 	return "Plot info: %s has %s. About %s until fruit. %s" % [String(variety["short"]), water_note, _day_count_text(days_left), String(variety["care"])]
 
 
+
 func _day_count_text(count: int) -> String:
 	return TextLibrary.day_count_text(count)
 
+
 func _jar_count_text(count: int) -> String:
 	return InventorySystem.jar_count_text(count)
+
 
 func _plot_status_text() -> String:
 	var cell: Vector2i = _info_cell()
@@ -2539,11 +2834,14 @@ func _plot_status_text() -> String:
 	return "%s\nCultivar: %s (%s)\nState: %s | %s\nGrowth: %s/%s good days, %s left\nCuttings: %s\nNext: %s\nCare: %s" % [title, String(variety["name"]), String(variety["short"]), stage_text, water_note, progress, grow_days, _day_count_text(days_left), ready_text, next_text, String(variety["care"])]
 
 
+
 func _growth_stage_label(stage: int) -> String:
 	return TextLibrary.growth_stage_label(stage)
 
+
 func _cutting_status_text(plot: Dictionary) -> String:
 	return CropSystem.cutting_status_text(plot, varieties)
+
 
 func _plot_next_step_text(plot: Dictionary, days_left: int) -> String:
 	if int(plot["stage"]) >= 3:
@@ -2555,6 +2853,7 @@ func _plot_next_step_text(plot: Dictionary, days_left: int) -> String:
 	if days_left <= 1:
 		return "Water once more; fruit should appear soon."
 	return "Water steadily. Compost if this tree matters."
+
 
 
 func _resolve_festival_week(weather_name: String, day_summary: String = "") -> void:
@@ -2576,22 +2875,28 @@ func _resolve_festival_week(weather_name: String, day_summary: String = "") -> v
 	festival_progress = 0
 
 
+
 func _festival_goal_for_week() -> int:
 	return TextLibrary.festival_goal_for_week(festival_week, reputation)
 
+
 func _festival_text() -> String:
 	return TextLibrary.festival_text(festival_week, festival_progress, festival_goal, _festival_days_left())
+
 
 func _festival_days_left() -> int:
 	var elapsed: int = (day - 1) % FESTIVAL_LENGTH
 	return FESTIVAL_LENGTH - elapsed
 
 
+
 func _relationship_summary() -> String:
 	return TextLibrary.relationship_summary(relationships)
 
+
 func _customer_bonus(customer: String) -> int:
 	return OrderSystem.customer_bonus(customer, relationships)
+
 
 func _grant_relationship_milestone(customer: String, score: int) -> String:
 	if score != 3 and score != 6:
@@ -2619,14 +2924,92 @@ func _grant_relationship_milestone(customer: String, score: int) -> String:
 	return ""
 
 
+
 func _short_customer_name(customer: String) -> String:
 	return OrderSystem.short_customer_name(customer)
 
+# ============================================================
+# VILLAGE REQUESTS TEXT FORMATTERS
+# ------------------------------------------------------------
+# These format the text that appears inside the orderbook Controls.
+# Keep layout-heavy spacing here, not in OrderSystem, so the gameplay
+# order logic can stay separate from UI presentation.
+# ============================================================
+
+
+func _order_variety_short(variety_index: int) -> String:
+	if variety_index < 0 or variety_index >= varieties.size():
+		return "Mixed"
+	return String(varieties[variety_index].get("short", "Mixed"))
+
+
+
 func _order_text() -> String:
-	return OrderSystem.order_text(selected_order_index, accepted_orders, order_offers, varieties)
+	# ============================================================
+	# CURRENT REQUEST HERO COPY
+	# ------------------------------------------------------------
+	# Compact single-card format:
+	#   status + customer
+	#   order item + note
+	#   payout + time on one line
+	# ============================================================
+	var selected: Dictionary = _selected_order()
+	if selected.is_empty():
+		return "📋 No request selected\n\nAvailable requests will show here when villagers post them."
+
+	var accepted: bool = _selected_order_is_accepted()
+	var status: String = "✅ ACTIVE REQUEST" if accepted else "🆕 NEW OFFER"
+	var customer: String = _short_customer_name(String(selected.get("customer", "Customer")))
+	var quantity: int = int(selected.get("need", 0))
+	var variety_name: String = _order_variety_short(int(selected.get("variety", -1)))
+	var label: String = String(selected.get("label", "Fresh figs"))
+	var reward: int = int(selected.get("reward", 0))
+	var patience: int = int(selected.get("patience", 0))
+	var action_line: String = "Ready when packed." if accepted else "Accept when your pantry can handle it."
+
+	return "%s\n%s\n\n%sx %s figs\n%s\n\n💰 $%s      ⏳ %s left\n%s" % [
+		status,
+		customer,
+		quantity,
+		variety_name,
+		label,
+		reward,
+		_day_count_text(patience),
+		action_line
+	]
+
+
 
 func _order_button_text(index: int) -> String:
-	return OrderSystem.order_button_text(index, accepted_orders, order_offers, varieties)
+	# ============================================================
+	# AVAILABLE REQUEST CARD COPY
+	# ------------------------------------------------------------
+	# Two-line card format for the scroll list.
+	# The button background supplies the card shape.
+	# ============================================================
+	var selected: Dictionary = _order_at(index)
+	if selected.is_empty():
+		return ""
+
+	var accepted: bool = OrderSystem.selected_order_is_accepted(index, accepted_orders)
+	var status_icon: String = "✅" if accepted else "🆕"
+	var customer: String = _short_customer_name(String(selected.get("customer", "Customer")))
+	var quantity: int = int(selected.get("need", 0))
+	var variety_name: String = _order_variety_short(int(selected.get("variety", -1)))
+	var reward: int = int(selected.get("reward", 0))
+	var patience: int = int(selected.get("patience", 0))
+	var time_text: String = _day_count_text(patience) if accepted else "review"
+
+	return "%s %s\n%sx %s figs   •   $%s   •   %s" % [
+		status_icon,
+		customer,
+		quantity,
+		variety_name,
+		reward,
+		time_text
+	]
+
+
 
 func _update_order_buttons() -> void:
 	var total: int = _order_count()
@@ -2642,43 +3025,52 @@ func _update_order_buttons() -> void:
 			button.disabled = true
 
 
+
 func _select_order_slot(slot: int) -> void:
 	selected_order_index = clampi(slot, 0, maxi(0, _order_count() - 1))
 	_update_ui()
 
 
+
 func _selected_order() -> Dictionary:
 	return OrderSystem.order_at(selected_order_index, accepted_orders, order_offers)
+
 
 func _order_at(index: int) -> Dictionary:
 	return OrderSystem.order_at(index, accepted_orders, order_offers)
 
+
 func _order_count() -> int:
 	return OrderSystem.order_count(accepted_orders, order_offers)
+
 
 func _selected_order_is_accepted() -> bool:
 	return OrderSystem.selected_order_is_accepted(selected_order_index, accepted_orders)
 
+
 func _can_accept_selected_order() -> bool:
 	return OrderSystem.can_accept_selected_order(selected_order_index, accepted_orders, order_offers)
+
 
 func _can_fulfill_selected_order() -> bool:
 	return OrderSystem.can_fulfill_selected_order(selected_order_index, accepted_orders, order_offers)
 
+
 func _accept_selected_order() -> void:
-	if not _can_accept_selected_order():
-		_say("Pick an open offer to accept. Browsing alone has no Trust penalty.")
+	var result: Dictionary = OrderSystem.accept_selected_order(selected_order_index, accepted_orders, order_offers)
+
+	if not bool(result["ok"]):
+		match String(result["reason"]):
+			"not_available":
+				_say("Pick an open offer to accept. Browsing alone has no Trust penalty.")
+			"already_accepted":
+				_say("That order is already accepted.")
+			_:
+				_say("That order cannot be accepted right now.")
 		return
-	var offer_index: int = selected_order_index - accepted_orders.size()
-	if offer_index < 0 or offer_index >= order_offers.size():
-		_say("That order is already accepted.")
-		return
-	var selected: Dictionary = order_offers[offer_index]
-	selected["accepted"] = true
-	selected["patience"] = 4
-	order_offers.remove_at(offer_index)
-	accepted_orders.append(selected)
-	selected_order_index = accepted_orders.size() - 1
+
+	var selected: Dictionary = result["selected"]
+	selected_order_index = int(result["selected_order_index"])
 	_log_event("Accepted order: %s needs %s figs." % [_short_customer_name(String(selected["customer"])), int(selected["need"])])
 	_play_sfx("order")
 	_say("Accepted %s's order. Finish it before the timer runs out to gain Trust." % _short_customer_name(String(selected["customer"])))
@@ -2687,6 +3079,7 @@ func _accept_selected_order() -> void:
 
 func _normalize_selected_order() -> void:
 	selected_order_index = OrderSystem.normalize_selected_order(selected_order_index, accepted_orders, order_offers)
+
 
 func _tool_block_reason() -> String:
 	var plot: Dictionary = plots[farmer_cell.y][farmer_cell.x]
@@ -2718,52 +3111,68 @@ func _tool_block_reason() -> String:
 	return "Move to a valid plot."
 
 
+
 func _roll_weather() -> void:
 	var result: Dictionary = WeatherSystem.roll_weather(day)
 	current_weather = int(result["weather_index"])
 	temperature_f = int(result["temperature_f"])
 
+
 func _weather_name() -> String:
 	return WeatherSystem.weather_name(weather_table, current_weather)
+
 
 func _weather_detail_text() -> String:
 	return WeatherSystem.weather_detail_text(weather_table, current_weather, day, temperature_f)
 
+
 func _weather_icon() -> String:
 	return WeatherSystem.weather_icon(weather_table, current_weather)
+
 
 func _season_name() -> String:
 	return WeatherSystem.season_name(day)
 
+
 func _season_base_temperature(season: String) -> int:
 	return WeatherSystem.season_base_temperature(season)
+
 
 func _roll_temperature(season: String) -> void:
 	temperature_f = WeatherSystem.roll_temperature(season, _weather_name())
 
+
 func _season_growing_note() -> String:
 	return WeatherSystem.season_growing_note(day)
+
 
 func _is_rainy() -> bool:
 	return WeatherSystem.is_rainy(_weather_name())
 
+
 func _pollinator_chance() -> float:
 	return WeatherSystem.pollinator_chance(pollinator_garden, _weather_name())
+
 
 func _max_water() -> int:
 	return WeatherSystem.max_water(BASE_MAX_WATER, barrel_level)
 
+
 func _total_cuttings() -> int:
 	return InventorySystem.total_items(cuttings)
+
 
 func _total_figs() -> int:
 	return InventorySystem.total_items(fig_bins)
 
+
 func _take_any_figs(amount: int) -> void:
 	InventorySystem.take_any(fig_bins, amount)
 
+
 func _variety_name(index: int) -> String:
 	return String(varieties[index]["name"])
+
 
 
 func _say(text: String) -> void:
@@ -2772,10 +3181,17 @@ func _say(text: String) -> void:
 	_mark_ui_dirty()
 
 
+
 func _cell_from_mouse(mouse_pos: Vector2) -> Vector2i:
 	var local: Vector2 = mouse_pos - farm_origin
 	return Vector2i(floori(local.x / tile_size), floori(local.y / tile_size))
 
 
+
 func _is_cell_inside(cell: Vector2i) -> bool:
 	return cell.x >= 0 and cell.y >= 0 and cell.x < GRID_W and cell.y < GRID_H
+
+# /*=== MAIN.GD FILE END ===*/
+# ============================================================
+# /*=== MAIN SCRIPT FILE END ===*/
+# ============================================================

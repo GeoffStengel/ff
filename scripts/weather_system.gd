@@ -1,3 +1,6 @@
+# ============================================================
+# /*=== WEATHER SYSTEM FILE START ===*/
+# ============================================================
 extends RefCounted
 
 static func roll_weather(day: int) -> Dictionary:
@@ -138,3 +141,6 @@ static func pollinator_chance(pollinator_garden: bool, weather: String) -> float
 
 static func max_water(base_max_water: int, barrel_level: int) -> int:
 	return base_max_water + barrel_level * 4
+# ============================================================
+# /*=== WEATHER SYSTEM FILE END ===*/
+# ============================================================
