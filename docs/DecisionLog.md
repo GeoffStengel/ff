@@ -99,3 +99,16 @@ Benefits:
 - Shared drawer shell has one owner
 - Feature modules can lay out inside the drawer content area consistently
 - LayoutSystem now stays focused on shared farm geometry and responsive checks
+
+## Phase 3 Feature UI Extraction
+
+Reason:
+Farm Controls, Pantry, Guide, and Help drawer tabs still had feature-specific sizing, spacing, card geometry, and pure display formatting embedded in main.gd.
+
+Decision:
+Created FarmControlsUI, PantryUI, GuideUI, and HelpUI. These modules own feature tab layout, control minimum sizes, card backplate geometry, and pure display text helpers. main.gd keeps node creation, callbacks, gameplay state, mutations, UI refresh, sounds, and orchestration.
+
+Benefits:
+- Feature tabs can be adjusted in their own files
+- main.gd keeps shrinking toward coordinator-only responsibilities
+- DrawerUI remains the shared shell while feature modules own internal drawer presentation

@@ -14,26 +14,31 @@ Each gameplay feature belongs to one focused system.
 
 ```
 main.gd
-│
-├── Systems
-│   ├── CropSystem
-│   ├── InventorySystem
-│   ├── OrderSystem
-│   ├── WeatherSystem
-│   ├── SaveSystem
-│   └── ...
-│
-├── UI
-│   ├── VillageRequestsUI
-│   ├── HUDUI
-│   ├── BottomBarUI
-│   ├── ToolPanelUI
-│   └── Theme
-│
-└── Renderers
-    ├── FarmRenderer
-    ├── EffectsRenderer
-    └── ...
+|
+|-- Systems
+|   |-- CropSystem
+|   |-- InventorySystem
+|   |-- OrderSystem
+|   |-- WeatherSystem
+|   |-- SaveSystem
+|   `-- ...
+|
+|-- UI
+|   |-- DrawerUI
+|   |-- VillageRequestsUI
+|   |-- FarmControlsUI
+|   |-- PantryUI
+|   |-- GuideUI
+|   |-- HelpUI
+|   |-- HUDUI
+|   |-- BottomBarUI
+|   |-- ToolPanelUI
+|   `-- Theme / Layout / Constants
+|
+`-- Renderers
+    |-- FarmRenderer
+    |-- EffectsRenderer
+    `-- ...
 ```
 
 ---

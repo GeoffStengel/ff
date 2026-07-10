@@ -79,3 +79,19 @@ Extract the shared right-side drawer shell without changing gameplay behavior or
 
 ### Next
 - Manually test every drawer tab, Village Requests alignment, resize behavior, and save/load with a drawer open.
+
+## 2026-07-10 Phase 3 Feature UI
+
+### Goal
+Complete Phase 3 UI modularization for Farm Controls, Pantry, Guide, and Help without changing gameplay behavior.
+
+### Completed
+- Added FarmControlsUI for Farm tab sizing, spacing, and card geometry.
+- Added PantryUI for Pantry tab sizing, spacing, card geometry, and preserve display copy.
+- Added GuideUI for Guide tab sizing, spacing, card geometry, notebook copy, and legend copy.
+- Added HelpUI for Help tab sizing, spacing, card geometry, and help text.
+- main.gd now keeps button creation, callbacks, gameplay state, mutations, UI refresh, sounds, and orchestration.
+- Added docs/ArchitectureMap.md.
+
+### Next
+- Manually test every drawer tab, pantry actions, guide/help text, resize behavior, mobile-width layout, save/load, and audio.

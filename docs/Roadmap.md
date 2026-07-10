@@ -42,13 +42,17 @@
 
 [x] BottomBarUI extraction
 
-Inventory
+[x] FarmControlsUI extraction
 
-Recipes
+[x] PantryUI extraction
 
 [x] ToolPanelUI extraction
 
 [x] DrawerUI extraction
+
+[x] GuideUI extraction
+
+[x] HelpUI extraction
 
 ---
 
@@ -101,7 +105,11 @@ Target: <1500 lines
 - [x] BottomBarUI
 - [x] ToolPanelUI
 - [x] DrawerUI
-- [ ] Feature modules complete
+- [x] FarmControlsUI
+- [x] PantryUI
+- [x] GuideUI
+- [x] HelpUI
+- [x] Feature modules complete
 
 ### Systems
 - [x] Save

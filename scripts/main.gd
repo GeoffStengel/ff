@@ -25,6 +25,10 @@ const HUDUI = preload("res://scripts/ui/hud_ui.gd")
 const BottomBarUI = preload("res://scripts/ui/bottom_bar_ui.gd")
 const ToolPanelUI = preload("res://scripts/ui/tool_panel_ui.gd")
 const DrawerUI = preload("res://scripts/ui/drawer_ui.gd")
+const FarmControlsUI = preload("res://scripts/ui/farm_controls_ui.gd")
+const PantryUI = preload("res://scripts/ui/pantry_ui.gd")
+const GuideUI = preload("res://scripts/ui/guide_ui.gd")
+const HelpUI = preload("res://scripts/ui/help_ui.gd")
 const UITheme := preload("res://scripts/ui/theme.gd")
 const UIConstants = preload("res://scripts/ui/ui_constants.gd")
 const FarmRenderer := preload("res://scripts/render/farm_renderer.gd")
@@ -164,8 +168,10 @@ var notebook_label: Label
 var plot_status_label: Label
 var guide_legend_label: Label
 var buy_cuttings_button: Button
+var buy_compost_button: Button
 var barrel_button: Button
 var garden_button: Button
+var day_button: Button
 var save_button: Button
 var load_button: Button
 var pause_button: Button
@@ -177,6 +183,7 @@ var make_jam_button: Button
 var sell_jam_button: Button
 var buy_jars_button: Button
 var recipe_button: Button
+var help_text_label: Label
 var sfx_player: AudioStreamPlayer
 var music_player: AudioStreamPlayer
 var sfx_library: Dictionary = {}
@@ -445,11 +452,64 @@ func _drawer_controls() -> Dictionary:
 	}
 
 
+func _farm_controls_ui_controls() -> Dictionary:
+	return {
+		"panel": controls_panel,
+		"action_hint": action_hint,
+		"buy_cuttings_button": buy_cuttings_button,
+		"buy_compost_button": buy_compost_button,
+		"clipping_button": clipping_button,
+		"barrel_button": barrel_button,
+		"garden_button": garden_button,
+		"day_button": day_button,
+		"save_button": save_button,
+		"load_button": load_button,
+		"pause_button": pause_button,
+		"sound_button": sound_button
+	}
+
+
+func _pantry_ui_controls() -> Dictionary:
+	return {
+		"panel": pantry_panel,
+		"figs_label": pantry_figs_label,
+		"cuttings_label": pantry_cuttings_label,
+		"preserves_label": pantry_preserves_label,
+		"preserve_label": preserve_label,
+		"buy_jars_button": buy_jars_button,
+		"make_jam_button": make_jam_button,
+		"sell_jam_button": sell_jam_button,
+		"recipe_button": recipe_button,
+		"trees_label": pantry_trees_label,
+		"hint_label": pantry_hint_label
+	}
+
+
+func _guide_ui_controls() -> Dictionary:
+	return {
+		"panel": guide_panel,
+		"notebook_label": notebook_label,
+		"plot_status_label": plot_status_label,
+		"legend_label": guide_legend_label
+	}
+
+
+func _help_ui_controls() -> Dictionary:
+	return {
+		"panel": help_panel,
+		"help_text_label": help_text_label
+	}
+
+
 func _apply_layout_to_controls() -> void:
 	HUDUI.apply_layout(_hud_controls(), _hud_layout())
 	BottomBarUI.apply_layout(_bottom_bar_controls(), _bottom_bar_layout())
 	ToolPanelUI.apply_layout(_tool_panel_controls(), _tool_panel_layout())
 	DrawerUI.apply_layout(_drawer_controls(), _drawer_layout())
+	FarmControlsUI.apply_layout(_farm_controls_ui_controls(), _village_requests_content_rect())
+	PantryUI.apply_layout(_pantry_ui_controls(), _village_requests_content_rect())
+	GuideUI.apply_layout(_guide_ui_controls(), _village_requests_content_rect())
+	HelpUI.apply_layout(_help_ui_controls(), _village_requests_content_rect())
 	VillageRequestsUI.apply_layout(_village_requests_controls(), _village_requests_content_rect())
 
 
@@ -650,7 +710,7 @@ func _build_ui() -> void:
 	var drawer_content_rect: Rect2 = _drawer_layout().get("content", Rect2())
 	controls_panel.position = drawer_content_rect.position
 	controls_panel.custom_minimum_size = drawer_content_rect.size
-	controls_panel.add_theme_constant_override("separation", 5)
+	controls_panel.add_theme_constant_override("separation", FarmControlsUI.panel_separation())
 	ui.add_child(controls_panel)
 
 	var title: Label = Label.new()
@@ -668,7 +728,7 @@ func _build_ui() -> void:
 
 	action_hint = Label.new()
 	action_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	action_hint.custom_minimum_size = Vector2(376, 24)
+	action_hint.custom_minimum_size = FarmControlsUI.action_hint_minimum_size()
 	_style_label(action_hint, 13, Color("#4c3c25"))
 	controls_panel.add_child(action_hint)
 
@@ -677,25 +737,25 @@ func _build_ui() -> void:
 	shop_row.add_theme_constant_override("separation", 8)
 	controls_panel.add_child(shop_row)
 	buy_cuttings_button = Button.new()
-	buy_cuttings_button.custom_minimum_size = Vector2(184, 32)
+	buy_cuttings_button.custom_minimum_size = FarmControlsUI.shop_button_minimum_size()
 	_style_button(buy_cuttings_button, 13, "secondary")
 	_decorate_button_icon(buy_cuttings_button, _texture_from(item_textures, "seeds"))
 	buy_cuttings_button.pressed.connect(_buy_cuttings)
 	shop_row.add_child(buy_cuttings_button)
-	var buy_compost: Button = Button.new()
-	buy_compost.text = "💰 Compost x2        $7"
-	buy_compost.custom_minimum_size = Vector2(184, 32)
-	_style_button(buy_compost, 13, "secondary")
-	_decorate_button_icon(buy_compost, _texture_from(item_textures, "fertilizer"))
-	buy_compost.pressed.connect(_buy_compost)
-	shop_row.add_child(buy_compost)
+	buy_compost_button = Button.new()
+	buy_compost_button.text = "💰 Compost x2        $7"
+	buy_compost_button.custom_minimum_size = FarmControlsUI.shop_button_minimum_size()
+	_style_button(buy_compost_button, 13, "secondary")
+	_decorate_button_icon(buy_compost_button, _texture_from(item_textures, "fertilizer"))
+	buy_compost_button.pressed.connect(_buy_compost)
+	shop_row.add_child(buy_compost_button)
 
 	clipping_row = HBoxContainer.new()
 	clipping_row.add_theme_constant_override("separation", 0)
 	controls_panel.add_child(clipping_row)
 	clipping_button = Button.new()
 	clipping_button.text = "Clip cutting (C)"
-	clipping_button.custom_minimum_size = Vector2(376, 28)
+	clipping_button.custom_minimum_size = FarmControlsUI.clipping_button_minimum_size()
 	_style_button(clipping_button, 12, "muted")
 	clipping_button.pressed.connect(func() -> void: call("_take_cutting_from_farmer_plot"))
 	clipping_row.add_child(clipping_button)
@@ -704,13 +764,13 @@ func _build_ui() -> void:
 	upgrade_row.add_theme_constant_override("separation", 8)
 	controls_panel.add_child(upgrade_row)
 	barrel_button = Button.new()
-	barrel_button.custom_minimum_size = Vector2(184, 32)
+	barrel_button.custom_minimum_size = FarmControlsUI.upgrade_button_minimum_size()
 	_style_button(barrel_button, 13, "secondary")
 	_decorate_button_icon(barrel_button, _texture_from(item_textures, "barrel"))
 	barrel_button.pressed.connect(_buy_barrel_upgrade)
 	upgrade_row.add_child(barrel_button)
 	garden_button = Button.new()
-	garden_button.custom_minimum_size = Vector2(184, 32)
+	garden_button.custom_minimum_size = FarmControlsUI.upgrade_button_minimum_size()
 	_style_button(garden_button, 13, "secondary")
 	_decorate_button_icon(garden_button, _texture_from(item_textures, "flower"))
 	garden_button.pressed.connect(_buy_pollinator_garden)
@@ -720,9 +780,9 @@ func _build_ui() -> void:
 	var day_row: HBoxContainer = HBoxContainer.new()
 	day_row.add_theme_constant_override("separation", 0)
 	controls_panel.add_child(day_row)
-	var day_button: Button = Button.new()
+	day_button = Button.new()
 	day_button.text = "🌙  End Day"
-	day_button.custom_minimum_size = Vector2(376, 34)
+	day_button.custom_minimum_size = FarmControlsUI.day_button_minimum_size()
 	_style_button(day_button, 13, "action")
 	day_button.pressed.connect(_start_next_day)
 	day_row.add_child(day_button)
@@ -732,23 +792,23 @@ func _build_ui() -> void:
 	controls_panel.add_child(save_row)
 	save_button = Button.new()
 	save_button.text = "▣ Save"
-	save_button.custom_minimum_size = Vector2(88, 30)
+	save_button.custom_minimum_size = FarmControlsUI.save_button_minimum_size()
 	_style_button(save_button, 12, "secondary")
 	save_button.pressed.connect(func() -> void: call("_save_game"))
 	save_row.add_child(save_button)
 	load_button = Button.new()
 	load_button.text = "▣ Load"
-	load_button.custom_minimum_size = Vector2(88, 30)
+	load_button.custom_minimum_size = FarmControlsUI.save_button_minimum_size()
 	_style_button(load_button, 12, "secondary")
 	load_button.pressed.connect(func() -> void: call("_load_game"))
 	save_row.add_child(load_button)
 	pause_button = Button.new()
-	pause_button.custom_minimum_size = Vector2(88, 30)
+	pause_button.custom_minimum_size = FarmControlsUI.save_button_minimum_size()
 	_style_button(pause_button, 12, "secondary")
 	pause_button.pressed.connect(func() -> void: call("_toggle_pause"))
 	save_row.add_child(pause_button)
 	sound_button = Button.new()
-	sound_button.custom_minimum_size = Vector2(88, 30)
+	sound_button.custom_minimum_size = FarmControlsUI.save_button_minimum_size()
 	_style_button(sound_button, 12, "secondary")
 	sound_button.pressed.connect(func() -> void: call("_toggle_sound"))
 	save_row.add_child(sound_button)
@@ -847,7 +907,7 @@ func _build_ui() -> void:
 	pantry_panel = VBoxContainer.new()
 	pantry_panel.position = drawer_content_rect.position
 	pantry_panel.custom_minimum_size = drawer_content_rect.size
-	pantry_panel.add_theme_constant_override("separation", 6)
+	pantry_panel.add_theme_constant_override("separation", PantryUI.panel_separation())
 	ui.add_child(pantry_panel)
 
 	var pantry_title: Label = Label.new()
@@ -857,28 +917,28 @@ func _build_ui() -> void:
 
 	_add_section_label(pantry_panel, "HARVEST")
 	pantry_figs_label = Label.new()
-	pantry_figs_label.custom_minimum_size = Vector2(376, 74)
+	pantry_figs_label.custom_minimum_size = PantryUI.figs_label_minimum_size()
 	pantry_figs_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(pantry_figs_label, 13, Color("#3d2e1c"))
 	pantry_panel.add_child(pantry_figs_label)
 
 	_add_section_label(pantry_panel, "PLANTING STOCK")
 	pantry_cuttings_label = Label.new()
-	pantry_cuttings_label.custom_minimum_size = Vector2(376, 58)
+	pantry_cuttings_label.custom_minimum_size = PantryUI.cuttings_label_minimum_size()
 	pantry_cuttings_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(pantry_cuttings_label, 13, Color("#3d2e1c"))
 	pantry_panel.add_child(pantry_cuttings_label)
 
 	_add_section_label(pantry_panel, "PRESERVES")
 	pantry_preserves_label = Label.new()
-	pantry_preserves_label.custom_minimum_size = Vector2(376, 48)
+	pantry_preserves_label.custom_minimum_size = PantryUI.preserves_label_minimum_size()
 	pantry_preserves_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(pantry_preserves_label, 13, Color("#3d2e1c"))
 	pantry_panel.add_child(pantry_preserves_label)
 
 	preserve_label = Label.new()
 	preserve_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	preserve_label.custom_minimum_size = Vector2(376, 26)
+	preserve_label.custom_minimum_size = PantryUI.preserve_recipe_minimum_size()
 	_style_label(preserve_label, 12, Color("#5b492e"))
 	pantry_panel.add_child(preserve_label)
 
@@ -887,40 +947,40 @@ func _build_ui() -> void:
 	pantry_panel.add_child(preserve_row)
 	buy_jars_button = Button.new()
 	buy_jars_button.text = "Buy jars"
-	buy_jars_button.custom_minimum_size = Vector2(88, 32)
+	buy_jars_button.custom_minimum_size = PantryUI.preserve_button_minimum_size()
 	_style_button(buy_jars_button, 12, "secondary")
 	buy_jars_button.pressed.connect(func() -> void: call("_buy_mason_jars"))
 	preserve_row.add_child(buy_jars_button)
 	make_jam_button = Button.new()
 	make_jam_button.text = "Make jam"
-	make_jam_button.custom_minimum_size = Vector2(88, 32)
+	make_jam_button.custom_minimum_size = PantryUI.preserve_button_minimum_size()
 	_style_button(make_jam_button, 12, "action")
 	_decorate_button_icon(make_jam_button, _texture_from(item_textures, "jam"))
 	make_jam_button.pressed.connect(func() -> void: call("_make_jam"))
 	preserve_row.add_child(make_jam_button)
 	sell_jam_button = Button.new()
 	sell_jam_button.text = "Sell jam"
-	sell_jam_button.custom_minimum_size = Vector2(88, 32)
+	sell_jam_button.custom_minimum_size = PantryUI.preserve_button_minimum_size()
 	_style_button(sell_jam_button, 12, "secondary")
 	_decorate_button_icon(sell_jam_button, _texture_from(item_textures, "jam"))
 	sell_jam_button.pressed.connect(func() -> void: call("_sell_jam"))
 	preserve_row.add_child(sell_jam_button)
 	recipe_button = Button.new()
 	recipe_button.text = "Recipe"
-	recipe_button.custom_minimum_size = Vector2(88, 32)
+	recipe_button.custom_minimum_size = PantryUI.preserve_button_minimum_size()
 	_style_button(recipe_button, 12, "secondary")
 	recipe_button.pressed.connect(func() -> void: call("_show_recipe"))
 	preserve_row.add_child(recipe_button)
 
 	_add_section_label(pantry_panel, "TREES")
 	pantry_trees_label = Label.new()
-	pantry_trees_label.custom_minimum_size = Vector2(376, 54)
+	pantry_trees_label.custom_minimum_size = PantryUI.trees_label_minimum_size()
 	pantry_trees_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(pantry_trees_label, 13, Color("#3d2e1c"))
 	pantry_panel.add_child(pantry_trees_label)
 
 	pantry_hint_label = Label.new()
-	pantry_hint_label.custom_minimum_size = Vector2(376, 38)
+	pantry_hint_label.custom_minimum_size = PantryUI.hint_label_minimum_size()
 	pantry_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(pantry_hint_label, 12, Color("#5b492e"))
 	pantry_panel.add_child(pantry_hint_label)
@@ -928,7 +988,7 @@ func _build_ui() -> void:
 	guide_panel = VBoxContainer.new()
 	guide_panel.position = drawer_content_rect.position
 	guide_panel.custom_minimum_size = drawer_content_rect.size
-	guide_panel.add_theme_constant_override("separation", 10)
+	guide_panel.add_theme_constant_override("separation", GuideUI.panel_separation())
 	ui.add_child(guide_panel)
 
 	var guide_title: Label = Label.new()
@@ -938,28 +998,28 @@ func _build_ui() -> void:
 
 	_add_section_label(guide_panel, "CULTIVAR")
 	notebook_label = Label.new()
-	notebook_label.custom_minimum_size = Vector2(376, 66)
+	notebook_label.custom_minimum_size = GuideUI.notebook_minimum_size()
 	notebook_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(notebook_label, 14, Color("#332414"))
 	guide_panel.add_child(notebook_label)
 
 	_add_section_label(guide_panel, "SELECTED PLOT")
 	plot_status_label = Label.new()
-	plot_status_label.custom_minimum_size = Vector2(376, 132)
+	plot_status_label.custom_minimum_size = GuideUI.plot_status_minimum_size()
 	plot_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(plot_status_label, 13, Color("#3d2e1c"))
 	guide_panel.add_child(plot_status_label)
 
 	_add_section_label(guide_panel, "VISUAL KEY")
 	var moisture_key_row: HBoxContainer = HBoxContainer.new()
-	moisture_key_row.add_theme_constant_override("separation", 14)
+	moisture_key_row.add_theme_constant_override("separation", GuideUI.visual_key_gap())
 	guide_panel.add_child(moisture_key_row)
 	_add_moisture_key(moisture_key_row, Color("#6f4a34"), "Wet")
 	_add_moisture_key(moisture_key_row, Color("#8f6040"), "Moist")
 	_add_moisture_key(moisture_key_row, Color("#bd8352"), "Dry")
 
 	guide_legend_label = Label.new()
-	guide_legend_label.custom_minimum_size = Vector2(376, 150)
+	guide_legend_label.custom_minimum_size = GuideUI.legend_minimum_size()
 	guide_legend_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(guide_legend_label, 13, Color("#4d3b24"))
 	guide_panel.add_child(guide_legend_label)
@@ -967,7 +1027,7 @@ func _build_ui() -> void:
 	help_panel = VBoxContainer.new()
 	help_panel.position = drawer_content_rect.position
 	help_panel.custom_minimum_size = drawer_content_rect.size
-	help_panel.add_theme_constant_override("separation", 10)
+	help_panel.add_theme_constant_override("separation", HelpUI.panel_separation())
 	ui.add_child(help_panel)
 
 	var help_title: Label = Label.new()
@@ -976,12 +1036,12 @@ func _build_ui() -> void:
 	help_panel.add_child(help_title)
 
 	_add_section_label(help_panel, "QUICK START")
-	var help_text: Label = Label.new()
-	help_text.custom_minimum_size = Vector2(376, 344)
-	help_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	help_text.text = _how_to_play_text()
-	_style_label(help_text, 13, Color("#3d2e1c"))
-	help_panel.add_child(help_text)
+	help_text_label = Label.new()
+	help_text_label.custom_minimum_size = HelpUI.help_text_minimum_size()
+	help_text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	help_text_label.text = HelpUI.how_to_play_text()
+	_style_label(help_text_label, 13, Color("#3d2e1c"))
+	help_panel.add_child(help_text_label)
 
 	bottom_action_label = Label.new()
 	var bottom_action_rect: Rect2 = _bottom_bar_layout().get("action_label", Rect2())
@@ -1043,11 +1103,11 @@ func _build_ui() -> void:
 func _add_section_label(parent: Control, text: String) -> void:
 	var spacer: ColorRect = ColorRect.new()
 	spacer.color = Color(1.0, 1.0, 1.0, 0.0)
-	spacer.custom_minimum_size = Vector2(376, 6)
+	spacer.custom_minimum_size = DrawerUI.section_spacer_minimum_size()
 	parent.add_child(spacer)
 	var label: Label = Label.new()
 	label.text = text
-	label.custom_minimum_size = Vector2(376, 13)
+	label.custom_minimum_size = DrawerUI.section_label_minimum_size()
 	_style_label(label, 10, Color("#725431"))
 	parent.add_child(label)
 
@@ -1392,32 +1452,27 @@ func _draw_open_drawer() -> void:
 
 func _draw_drawer_cards() -> void:
 	var content: Rect2 = _village_requests_content_rect()
-	var card_x: float = content.position.x
-	var card_w: float = content.size.x
 
 	match side_tab:
 		0:
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, 116)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 186), Vector2(card_w, 158)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 368), Vector2(card_w, 176)))
+			for backplate in FarmControlsUI.card_backplates(content):
+				_draw_drawer_card(backplate)
 
 		1:
 			for backplate in VillageRequestsUI.card_backplates(content):
 				_draw_drawer_card(backplate)
 
 		2:
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, 92)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 162), Vector2(card_w, 78)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 262), Vector2(card_w, 110)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 394), Vector2(card_w, 98)))
+			for backplate in PantryUI.card_backplates(content):
+				_draw_drawer_card(backplate)
 
 		3:
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, 112)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 182), Vector2(card_w, 184)))
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 396), Vector2(card_w, 164)))
+			for backplate in GuideUI.card_backplates(content):
+				_draw_drawer_card(backplate)
 
 		4:
-			_draw_drawer_card(Rect2(Vector2(card_x, content.position.y + 48), Vector2(card_w, minf(470.0, content.size.y - 64.0))))
+			for backplate in HelpUI.card_backplates(content):
+				_draw_drawer_card(backplate)
 
 
 func _draw_drawer_card(rect: Rect2) -> void:
@@ -2231,14 +2286,14 @@ func _update_ui() -> void:
 	pantry_trees_label.text = _pantry_trees_text()
 	pantry_hint_label.text = _pantry_hint_text()
 	relationship_label.text = _relationship_summary()
-	preserve_label.text = "Jam: 5 figs + 1 jar -> $18"
+	preserve_label.text = PantryUI.preserve_recipe_text()
 	logbook_label.text = _logbook_text()
 	buy_jars_button.disabled = coins < 6
 	make_jam_button.disabled = _total_figs() < 5 or mason_jars <= 0
 	sell_jam_button.disabled = jam_jars <= 0
-	notebook_label.text = _notebook_text()
+	notebook_label.text = GuideUI.notebook_text(varieties[selected_variety])
 	plot_status_label.text = _plot_status_text()
-	guide_legend_label.text = _guide_legend_text()
+	guide_legend_label.text = GuideUI.legend_text(_season_name(), temperature_f, _season_growing_note(), recipe_expanded)
 	_update_transient_ui()
 	dialogue_title_label.visible = dialogue_visible
 	dialogue_body_label.visible = dialogue_visible
@@ -2258,10 +2313,6 @@ func _update_ui() -> void:
 		variety_buttons[index].button_pressed = int(index) == selected_variety
 	ui_dirty = false
 
-
-
-func _how_to_play_text() -> String:
-	return TextLibrary.how_to_play_text()
 
 
 func _log_event(entry: String) -> void:
@@ -2307,10 +2358,6 @@ func _ripeness_label(ripe_days: int) -> String:
 
 func _ripeness_harvest_note(ripe_days: int) -> String:
 	return TextLibrary.ripeness_harvest_note(ripe_days)
-
-
-func _guide_legend_text() -> String:
-	return TextLibrary.guide_legend_text(_season_name(), temperature_f, _season_growing_note(), recipe_expanded)
 
 
 func _farm_hint_text() -> String:
@@ -2409,12 +2456,6 @@ func _pantry_trees_text() -> String:
 
 func _pantry_hint_text() -> String:
 	return InventorySystem.pantry_hint_text()
-
-
-func _notebook_text() -> String:
-	var variety: Dictionary = varieties[selected_variety]
-	return "Cultivar: %s\n%s" % [String(variety["short"]), String(variety["lesson"])]
-
 
 
 func _moisture_label(moisture: int) -> String:

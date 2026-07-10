@@ -20,6 +20,19 @@ const UITheme := preload("res://scripts/ui/theme.gd")
 
 
 # ============================================================
+# /*=== SHARED DRAWER CONTENT CONSTANTS START ===*/
+# ============================================================
+
+const SECTION_CONTENT_W := 376.0
+const SECTION_SPACER_H := 6.0
+const SECTION_LABEL_H := 13.0
+
+# ============================================================
+# /*=== SHARED DRAWER CONTENT CONSTANTS END ===*/
+# ============================================================
+
+
+# ============================================================
 # /*=== DRAWER LAYOUT START ===*/
 # ============================================================
 
@@ -88,6 +101,14 @@ static func drawer_content_rect(drawer: Rect2) -> Rect2:
 		drawer.position + Vector2(14, 42),
 		drawer.size - Vector2(28, 56)
 	)
+
+
+static func section_spacer_minimum_size() -> Vector2:
+	return Vector2(SECTION_CONTENT_W, SECTION_SPACER_H)
+
+
+static func section_label_minimum_size() -> Vector2:
+	return Vector2(SECTION_CONTENT_W, SECTION_LABEL_H)
 
 # ============================================================
 # /*=== DRAWER LAYOUT END ===*/

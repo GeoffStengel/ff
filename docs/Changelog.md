@@ -57,3 +57,13 @@
 - Completed the DrawerUI extraction for the shared right-side drawer shell.
 - Moved drawer geometry, content/hint rectangles, shared panel sizing, active-panel visibility helper, and decorative drawer shell drawing into DrawerUI.
 - Removed the old drawer-only helpers from LayoutSystem.
+
+## 2026-07-10
+
+### UI
+
+- Completed Phase 3 feature UI modularization for FarmControlsUI, PantryUI, GuideUI, and HelpUI.
+- Added feature UI modules for Farm Controls, Pantry, Guide, and Help drawer tabs.
+- Moved feature tab sizing, panel spacing, control minimum sizes, card backplate geometry, and pure display text helpers into the new modules.
+- Kept callbacks, gameplay state, inventory mutations, crop mutations, save/load, audio, and UI refresh orchestration in main.gd.
+- Added docs/ArchitectureMap.md to keep module ownership visible.
