@@ -38,21 +38,21 @@
 
 ## Phase 3
 
-[x] HUDUI extraction
+✅ HUDUI extraction
 
-[x] BottomBarUI extraction
+✅ BottomBarUI extraction
 
-[x] FarmControlsUI extraction
+✅ FarmControlsUI extraction
 
-[x] PantryUI extraction
+✅ PantryUI extraction
 
-[x] ToolPanelUI extraction
+✅ ToolPanelUI extraction
 
-[x] DrawerUI extraction
+✅ DrawerUI extraction
 
-[x] GuideUI extraction
+✅ GuideUI extraction
 
-[x] HelpUI extraction
+✅ HelpUI extraction
 
 ---
 
@@ -124,3 +124,20 @@ Target: <1500 lines
 - [x] FarmRenderer
 - [ ] UIRenderer
 - [ ] EffectsRenderer
+
+
+------------------------------------------------------------
+
+## Milestones
+
+✅ v0.1.0 Prototype
+
+✅ v0.2.0 Village Requests Architecture
+
+✅ v0.3.0 UI Modularization
+
+[ ] v0.4.0 Gameplay Architecture
+
+[ ] v0.5.0 Content Expansion
+
+[ ] v0.6.0 Early Access Candidate
