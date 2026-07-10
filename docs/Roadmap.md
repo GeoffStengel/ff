@@ -38,27 +38,29 @@
 
 ## Phase 3
 
-HUD
+[x] HUDUI extraction
 
-Bottom Bar
+[x] BottomBarUI extraction
 
 Inventory
 
 Recipes
 
-Tool Panel
+[x] ToolPanelUI extraction
+
+[x] DrawerUI extraction
 
 ---
 
 ## Phase 4
 
-Farm Renderer
+[x] FarmRenderer extraction
 
-Tree Renderer
+[ ] Tree Renderer
 
-Particles
+[ ] Particles
 
-Effects
+[ ] Effects
 
 ---
 
@@ -95,6 +97,10 @@ Target: <1500 lines
 - [x] Theme
 - [x] Constants
 - [x] Layout
+- [x] HUDUI
+- [x] BottomBarUI
+- [x] ToolPanelUI
+- [x] DrawerUI
 - [ ] Feature modules complete
 
 ### Systems
@@ -107,6 +113,6 @@ Target: <1500 lines
 - [ ] Economy
 
 ### Rendering
-- [ ] FarmRenderer
+- [x] FarmRenderer
 - [ ] UIRenderer
 - [ ] EffectsRenderer

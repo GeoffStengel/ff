@@ -1,4 +1,4 @@
-res://scripts/ui/village_requests_ui.gd
-res://scripts/ui/layout.gd
+res://scripts/render/farm_renderer.gd
+res://scripts/layout_system.gd
 res://scripts/main.gd
-res://scripts/ui/theme.gd
+res://scripts/ui/drawer_ui.gd

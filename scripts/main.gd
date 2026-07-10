@@ -21,8 +21,13 @@ const TextLibrary = preload("res://scripts/text_library.gd")
 const CropSystem = preload("res://scripts/crop_system.gd")
 const LayoutSystem = preload("res://scripts/layout_system.gd")
 const VillageRequestsUI = preload("res://scripts/ui/village_requests_ui.gd")
+const HUDUI = preload("res://scripts/ui/hud_ui.gd")
+const BottomBarUI = preload("res://scripts/ui/bottom_bar_ui.gd")
+const ToolPanelUI = preload("res://scripts/ui/tool_panel_ui.gd")
+const DrawerUI = preload("res://scripts/ui/drawer_ui.gd")
 const UITheme := preload("res://scripts/ui/theme.gd")
 const UIConstants = preload("res://scripts/ui/ui_constants.gd")
+const FarmRenderer := preload("res://scripts/render/farm_renderer.gd")
 # /*=== PRELOADS / EXTERNAL SYSTEMS END ===*/
 
 # /*=== CORE LAYOUT / THEME CONSTANTS START ===*/
@@ -38,7 +43,6 @@ const DRAWER_W := 420
 const BOTTOM_BAR_H := 84
 const GAP := 12
 const PANEL_RADIUS := 14
-const TOOL_BUTTON_SIZE := 46
 const BG_CREAM := "#fff8e8"
 const PANEL_FILL := "#f0ddb5"
 const PANEL_BORDER := "#6a4d2e"
@@ -353,58 +357,6 @@ func _viewport_size() -> Vector2:
 
 
 
-func _hud_rect() -> Rect2:
-	return LayoutSystem.hud_rect(SCREEN_PAD, HUD_H, _viewport_size())
-
-
-func _hud_row_one_pos() -> Vector2:
-	return LayoutSystem.hud_row_one_pos(_hud_rect())
-
-
-func _hud_row_two_pos() -> Vector2:
-	return LayoutSystem.hud_row_two_pos(_hud_rect())
-
-
-func _left_dock_rect() -> Rect2:
-	return LayoutSystem.left_dock_rect(SCREEN_PAD, HUD_H, LEFT_DOCK_W, BOTTOM_BAR_H, GAP, _viewport_size(), _is_mobile_layout())
-
-
-func _tool_pocket_rect() -> Rect2:
-	return LayoutSystem.tool_pocket_rect(_left_dock_rect())
-
-
-func _menu_pocket_rect() -> Rect2:
-	return LayoutSystem.menu_pocket_rect(_left_dock_rect())
-
-
-func _tool_column_pos() -> Vector2:
-	return LayoutSystem.tool_column_pos(_tool_pocket_rect())
-
-
-func _menu_column_pos() -> Vector2:
-	return LayoutSystem.menu_column_pos(_menu_pocket_rect())
-
-
-func _drawer_rect() -> Rect2:
-	return LayoutSystem.drawer_rect(SCREEN_PAD, HUD_H, DRAWER_W, BOTTOM_BAR_H, GAP, _viewport_size(), _is_mobile_layout())
-
-
-func _drawer_content_pos() -> Vector2:
-	return LayoutSystem.drawer_content_pos(_drawer_rect())
-
-
-func _drawer_content_size() -> Vector2:
-	return LayoutSystem.drawer_content_size(_drawer_rect())
-
-
-func _drawer_hint_pos() -> Vector2:
-	return LayoutSystem.drawer_hint_pos(_drawer_rect())
-
-
-func _drawer_hint_size() -> Vector2:
-	return LayoutSystem.drawer_hint_size(_drawer_rect())
-
-
 func _farm_board_size() -> Vector2:
 	return LayoutSystem.farm_board_size(GRID_W, GRID_H, tile_size)
 
@@ -417,71 +369,88 @@ func _plot_bed_rect() -> Rect2:
 	return LayoutSystem.plot_bed_rect(farm_origin, GRID_W, GRID_H, tile_size)
 
 
-func _bottom_status_rect() -> Rect2:
-	return LayoutSystem.bottom_status_rect(SCREEN_PAD, BOTTOM_BAR_H, GAP, _viewport_size(), _farm_board_rect(), _is_mobile_layout())
+func _hud_layout() -> Dictionary:
+	return HUDUI.build_layout(_viewport_size(), SCREEN_PAD, HUD_H)
 
 
-func _bottom_card_rect(index: int) -> Rect2:
-	return LayoutSystem.bottom_card_rect(index, GAP, _bottom_status_rect())
+func _hud_controls() -> Dictionary:
+	return {
+		"top_bar": top_bar,
+		"hud_second_row": hud_second_row,
+		"hud_labels": hud_labels,
+		"hud_fig_icon": hud_fig_icon
+	}
 
 
-func _bottom_action_label_pos() -> Vector2:
-	return LayoutSystem.bottom_action_label_pos(_bottom_card_rect(0))
+func _bottom_bar_layout() -> Dictionary:
+	return BottomBarUI.build_layout(
+		_viewport_size(),
+		_farm_board_rect(),
+		SCREEN_PAD,
+		BOTTOM_BAR_H,
+		GAP,
+		_is_mobile_layout()
+	)
 
 
-func _plot_card_label_pos() -> Vector2:
-	return LayoutSystem.plot_card_label_pos(_bottom_card_rect(1))
+func _bottom_bar_controls() -> Dictionary:
+	return {
+		"action_label": bottom_action_label,
+		"plot_label": plot_card_label,
+		"message_label": message_label
+	}
 
 
-func _bottom_card_label_size() -> Vector2:
-	return LayoutSystem.bottom_card_label_size(_bottom_card_rect(0))
+func _tool_panel_layout() -> Dictionary:
+	return ToolPanelUI.build_layout(
+		_viewport_size(),
+		SCREEN_PAD,
+		HUD_H,
+		LEFT_DOCK_W,
+		BOTTOM_BAR_H,
+		GAP,
+		_is_mobile_layout()
+	)
 
 
-func _message_label_pos() -> Vector2:
-	return LayoutSystem.message_label_pos(_bottom_status_rect())
+func _tool_panel_controls() -> Dictionary:
+	return {
+		"tool_row": dock_tool_row,
+		"menu_row": tab_row,
+		"tool_section_label": tool_section_label,
+		"menu_section_label": menu_section_label
+	}
 
 
-func _message_label_size() -> Vector2:
-	return LayoutSystem.message_label_size(_bottom_status_rect())
+func _drawer_layout() -> Dictionary:
+	return DrawerUI.build_layout(
+		_viewport_size(),
+		SCREEN_PAD,
+		HUD_H,
+		DRAWER_W,
+		BOTTOM_BAR_H,
+		GAP,
+		_is_mobile_layout()
+	)
+
+
+func _drawer_panels() -> Array:
+	return [controls_panel, market_panel, pantry_panel, guide_panel, help_panel]
+
+
+func _drawer_controls() -> Dictionary:
+	return {
+		"hint_label": dock_hint_label,
+		"panels": _drawer_panels()
+	}
 
 
 func _apply_layout_to_controls() -> void:
-	if top_bar != null:
-		top_bar.position = _hud_row_one_pos()
-	if hud_second_row != null:
-		hud_second_row.position = _hud_row_two_pos()
-	if dock_tool_row != null:
-		dock_tool_row.position = _tool_column_pos()
-	if tab_row != null:
-		tab_row.position = _menu_column_pos()
-	if tool_section_label != null:
-		tool_section_label.position = _tool_pocket_rect().position + Vector2(10, 4)
-		tool_section_label.custom_minimum_size = Vector2(_tool_pocket_rect().size.x - 20, 14)
-	if menu_section_label != null:
-		menu_section_label.position = _menu_pocket_rect().position + Vector2(10, 4)
-		menu_section_label.custom_minimum_size = Vector2(_menu_pocket_rect().size.x - 20, 14)
-	for panel in [controls_panel, market_panel, pantry_panel, guide_panel, help_panel]:
-		if panel != null:
-			panel.position = _drawer_content_pos()
-			panel.custom_minimum_size = _drawer_content_size()
-	if bottom_action_label != null:
-		bottom_action_label.position = _bottom_action_label_pos()
-		bottom_action_label.custom_minimum_size = _bottom_card_label_size()
-	if plot_card_label != null:
-		plot_card_label.position = _plot_card_label_pos()
-		plot_card_label.custom_minimum_size = _bottom_card_label_size()
-	if dock_hint_label != null:
-		dock_hint_label.position = _drawer_hint_pos()
-		dock_hint_label.custom_minimum_size = _drawer_hint_size()
-	if message_label != null:
-		message_label.position = _message_label_pos()
-		message_label.custom_minimum_size = _message_label_size()
+	HUDUI.apply_layout(_hud_controls(), _hud_layout())
+	BottomBarUI.apply_layout(_bottom_bar_controls(), _bottom_bar_layout())
+	ToolPanelUI.apply_layout(_tool_panel_controls(), _tool_panel_layout())
+	DrawerUI.apply_layout(_drawer_controls(), _drawer_layout())
 	VillageRequestsUI.apply_layout(_village_requests_controls(), _village_requests_content_rect())
-
-
-
-func _hud_label_width(key: String) -> int:
-	return LayoutSystem.hud_label_width(key)
 
 
 func _build_sfx() -> void:
@@ -586,20 +555,12 @@ func _tab_texture(tab: int) -> Texture2D:
 
 
 
-func _draw_texture_centered(texture: Texture2D, center: Vector2, size: Vector2) -> void:
-	if texture == null:
-		return
-	var rect: Rect2 = Rect2(center - size * 0.5, size)
-	draw_texture_rect(texture, rect, false)
-
-
-
 func _build_ui() -> void:
 	var ui: CanvasLayer = CanvasLayer.new()
 	add_child(ui)
 
 	top_bar = HBoxContainer.new()
-	top_bar.position = _hud_row_one_pos()
+	top_bar.position = _hud_layout().get("row_one_pos", Vector2.ZERO)
 	top_bar.add_theme_constant_override("separation", 8)
 	ui.add_child(top_bar)
 
@@ -611,18 +572,18 @@ func _build_ui() -> void:
 			hud_fig_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			top_bar.add_child(hud_fig_icon)
 		var label: Label = Label.new()
-		label.custom_minimum_size = Vector2(_hud_label_width(key), 24)
+		label.custom_minimum_size = HUDUI.label_minimum_size(key, 1)
 		_style_label(label, 15, Color("#31401f"))
 		top_bar.add_child(label)
 		hud_labels[key] = label
 
 	hud_second_row = HBoxContainer.new()
-	hud_second_row.position = _hud_row_two_pos()
+	hud_second_row.position = _hud_layout().get("row_two_pos", Vector2.ZERO)
 	hud_second_row.add_theme_constant_override("separation", 12)
 	ui.add_child(hud_second_row)
 	for key in ["Weather", "Guide"]:
 		var label: Label = Label.new()
-		label.custom_minimum_size = Vector2(_hud_label_width(key), 20)
+		label.custom_minimum_size = HUDUI.label_minimum_size(key, 2)
 		label.clip_text = true
 		_style_label(label, 13, Color("#31401f"))
 		hud_second_row.add_child(label)
@@ -649,12 +610,15 @@ func _build_ui() -> void:
 	ui.add_child(pause_overlay_hint)
 
 	dock_tool_row = VBoxContainer.new()
-	dock_tool_row.position = _tool_column_pos()
-	dock_tool_row.add_theme_constant_override("separation", GAP / 2)
+	dock_tool_row.position = _tool_panel_layout().get("tool_column_pos", Vector2.ZERO)
+	dock_tool_row.add_theme_constant_override("separation", ToolPanelUI.row_separation())
 	ui.add_child(dock_tool_row)
 
 	tool_section_label = Label.new()
 	tool_section_label.text = "TOOLS"
+	var tool_label_rect: Rect2 = _tool_panel_layout().get("tool_section_label", Rect2())
+	tool_section_label.position = tool_label_rect.position
+	tool_section_label.custom_minimum_size = tool_label_rect.size
 	_style_label(tool_section_label, 10, Color(MUTED_TEXT))
 	ui.add_child(tool_section_label)
 
@@ -664,12 +628,15 @@ func _build_ui() -> void:
 	_add_tool_button(dock_tool_row, "✂", Tool.HARVEST)
 
 	tab_row = VBoxContainer.new()
-	tab_row.position = _menu_column_pos()
-	tab_row.add_theme_constant_override("separation", GAP / 2)
+	tab_row.position = _tool_panel_layout().get("menu_column_pos", Vector2.ZERO)
+	tab_row.add_theme_constant_override("separation", ToolPanelUI.row_separation())
 	ui.add_child(tab_row)
 
 	menu_section_label = Label.new()
 	menu_section_label.text = "MENUS"
+	var menu_label_rect: Rect2 = _tool_panel_layout().get("menu_section_label", Rect2())
+	menu_section_label.position = menu_label_rect.position
+	menu_section_label.custom_minimum_size = menu_label_rect.size
 	_style_label(menu_section_label, 10, Color(MUTED_TEXT))
 	ui.add_child(menu_section_label)
 
@@ -680,8 +647,9 @@ func _build_ui() -> void:
 	_add_tab_button(tab_row, "Help", 4)
 
 	controls_panel = VBoxContainer.new()
-	controls_panel.position = _drawer_content_pos()
-	controls_panel.custom_minimum_size = _drawer_content_size()
+	var drawer_content_rect: Rect2 = _drawer_layout().get("content", Rect2())
+	controls_panel.position = drawer_content_rect.position
+	controls_panel.custom_minimum_size = drawer_content_rect.size
 	controls_panel.add_theme_constant_override("separation", 5)
 	ui.add_child(controls_panel)
 
@@ -877,8 +845,8 @@ func _build_ui() -> void:
 	# ============================================================
 
 	pantry_panel = VBoxContainer.new()
-	pantry_panel.position = _drawer_content_pos()
-	pantry_panel.custom_minimum_size = _drawer_content_size()
+	pantry_panel.position = drawer_content_rect.position
+	pantry_panel.custom_minimum_size = drawer_content_rect.size
 	pantry_panel.add_theme_constant_override("separation", 6)
 	ui.add_child(pantry_panel)
 
@@ -958,8 +926,8 @@ func _build_ui() -> void:
 	pantry_panel.add_child(pantry_hint_label)
 
 	guide_panel = VBoxContainer.new()
-	guide_panel.position = _drawer_content_pos()
-	guide_panel.custom_minimum_size = _drawer_content_size()
+	guide_panel.position = drawer_content_rect.position
+	guide_panel.custom_minimum_size = drawer_content_rect.size
 	guide_panel.add_theme_constant_override("separation", 10)
 	ui.add_child(guide_panel)
 
@@ -997,8 +965,8 @@ func _build_ui() -> void:
 	guide_panel.add_child(guide_legend_label)
 
 	help_panel = VBoxContainer.new()
-	help_panel.position = _drawer_content_pos()
-	help_panel.custom_minimum_size = _drawer_content_size()
+	help_panel.position = drawer_content_rect.position
+	help_panel.custom_minimum_size = drawer_content_rect.size
 	help_panel.add_theme_constant_override("separation", 10)
 	ui.add_child(help_panel)
 
@@ -1016,29 +984,33 @@ func _build_ui() -> void:
 	help_panel.add_child(help_text)
 
 	bottom_action_label = Label.new()
-	bottom_action_label.position = _bottom_action_label_pos()
-	bottom_action_label.custom_minimum_size = _bottom_card_label_size()
+	var bottom_action_rect: Rect2 = _bottom_bar_layout().get("action_label", Rect2())
+	bottom_action_label.position = bottom_action_rect.position
+	bottom_action_label.custom_minimum_size = bottom_action_rect.size
 	bottom_action_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(bottom_action_label, 13, Color("#2f3b1f"))
 	ui.add_child(bottom_action_label)
 
 	plot_card_label = Label.new()
-	plot_card_label.position = _plot_card_label_pos()
-	plot_card_label.custom_minimum_size = _bottom_card_label_size()
+	var plot_card_rect: Rect2 = _bottom_bar_layout().get("plot_label", Rect2())
+	plot_card_label.position = plot_card_rect.position
+	plot_card_label.custom_minimum_size = plot_card_rect.size
 	plot_card_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(plot_card_label, 12, Color("#2f3b1f"))
 	ui.add_child(plot_card_label)
 
 	dock_hint_label = Label.new()
-	dock_hint_label.position = _drawer_hint_pos()
-	dock_hint_label.custom_minimum_size = _drawer_hint_size()
+	var drawer_hint_rect: Rect2 = _drawer_layout().get("hint", Rect2())
+	dock_hint_label.position = drawer_hint_rect.position
+	dock_hint_label.custom_minimum_size = drawer_hint_rect.size
 	dock_hint_label.clip_text = true
 	_style_label(dock_hint_label, 11, Color("#725431"))
 	ui.add_child(dock_hint_label)
 
 	message_label = Label.new()
-	message_label.position = _message_label_pos()
-	message_label.custom_minimum_size = _message_label_size()
+	var message_rect: Rect2 = _bottom_bar_layout().get("message", Rect2())
+	message_label.position = message_rect.position
+	message_label.custom_minimum_size = message_rect.size
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_style_label(message_label, 13, Color("#2f3b1f"))
 	ui.add_child(message_label)
@@ -1082,7 +1054,7 @@ func _add_section_label(parent: Control, text: String) -> void:
 
 
 func _village_requests_content_rect() -> Rect2:
-	return Rect2(_drawer_content_pos(), _drawer_content_size())
+	return _drawer_layout().get("content", Rect2())
 
 
 func _village_requests_controls() -> Dictionary:
@@ -1123,7 +1095,7 @@ func _add_tab_button(parent: Control, text: String, tab: int) -> void:
 	button.text = _tab_icon(tab)
 	button.tooltip_text = text
 	button.toggle_mode = true
-	button.custom_minimum_size = Vector2(TOOL_BUTTON_SIZE, TOOL_BUTTON_SIZE)
+	button.custom_minimum_size = ToolPanelUI.button_minimum_size()
 	_style_button(button, 18, _tab_role(tab))
 	_apply_button_icon(button, _tab_texture(tab))
 	button.pressed.connect(func() -> void: call("_set_side_tab", tab))
@@ -1352,7 +1324,7 @@ func _add_tool_button(parent: Control, text: String, tool: int) -> void:
 	button.text = text
 	button.tooltip_text = "%s  [%s]" % [_tool_name(tool), _tool_shortcut(tool)]
 	button.toggle_mode = true
-	button.custom_minimum_size = Vector2(TOOL_BUTTON_SIZE, TOOL_BUTTON_SIZE)
+	button.custom_minimum_size = ToolPanelUI.button_minimum_size()
 	var role: String = "primary"
 	match tool:
 		Tool.WATER:
@@ -1385,50 +1357,35 @@ func _add_variety_button(parent: Control, index: int) -> void:
 	variety_buttons[index] = button
 
 
-
 func _draw_background() -> void:
-	var weather: Dictionary = weather_table[current_weather]
-	var viewport: Vector2 = get_viewport_rect().size
-	draw_rect(Rect2(Vector2.ZERO, viewport), Color(String(weather["sky"])))
-	var ground_y: float = float(HUD_H + GAP + 24)
-	draw_rect(Rect2(Vector2(0, ground_y), Vector2(viewport.x, viewport.y - ground_y)), Color(String(weather["ground"])))
-	_draw_soft_hill(Vector2(-80, ground_y + 80), Vector2(viewport.x + 160.0, 170), Color(String(weather["ground"])).lightened(0.10))
-	_draw_soft_hill(Vector2(80, ground_y + 144), Vector2(viewport.x + 80.0, 190), Color(String(weather["ground"])).darkened(0.04))
-	_draw_background_trees(ground_y)
-	draw_circle(Vector2(viewport.x - 240.0, 86), 42, Color("#ffd76a"))
-	_draw_farm_board()
-	if String(weather["name"]) == "Rain":
-		for i in 18:
-			var start: Vector2 = Vector2(28 + i * 68, 86 + (i % 3) * 19)
-			draw_line(start, start + Vector2(-12, 30), Color("#6b93a8"), 2.0)
-	elif String(weather["name"]) == "Heat":
-		for i in 5:
-			var y: int = 126 + i * 28
-			draw_arc(Vector2(610, y), 38, 0.2, 2.9, 18, Color("#d18b42"), 2.0)
+	FarmRenderer.draw_background(
+		self,
+		weather_table[current_weather],
+		get_viewport_rect().size,
+		HUD_H,
+		GAP
+	)
+	FarmRenderer.draw_farm_board(self, _farm_board_rect(), _plot_bed_rect())
 
 
-
-func _draw_soft_hill(pos: Vector2, size: Vector2, color: Color) -> void:
-	var center: Vector2 = pos + Vector2(size.x * 0.5, size.y)
-	draw_arc(center, size.x * 0.5, PI, TAU, 40, color, size.y)
-
-
-
-func _draw_background_trees(ground_y: float) -> void:
-	for i in 7:
-		var x: float = 56.0 + float(i) * 188.0
-		var base_y: float = ground_y + 52.0 + float(i % 2) * 18.0
-		draw_line(Vector2(x, base_y + 42.0), Vector2(x, base_y - 18.0), Color("#6b4329"), 8.0)
-		draw_circle(Vector2(x - 18.0, base_y - 18.0), 24.0, Color(0.25, 0.45, 0.22, 0.24))
-		draw_circle(Vector2(x + 12.0, base_y - 24.0), 28.0, Color(0.25, 0.45, 0.22, 0.22))
-		draw_circle(Vector2(x, base_y - 44.0), 22.0, Color(0.25, 0.45, 0.22, 0.20))
-
-
+func _draw_farm() -> void:
+	FarmRenderer.draw_farm_plots(
+		self,
+		plots,
+		varieties,
+		crop_textures,
+		GRID_W,
+		GRID_H,
+		farm_origin,
+		tile_size,
+		selected_cell,
+		farmer_cell
+	)
 
 func _draw_open_drawer() -> void:
 	if not panel_open:
 		return
-	_draw_ui_panel(_drawer_rect())
+	DrawerUI.draw_drawer_shell(self, _drawer_layout())
 	_draw_drawer_cards()
 
 
@@ -1470,46 +1427,12 @@ func _draw_drawer_card(rect: Rect2) -> void:
 
 
 func _draw_top_hud_bar() -> void:
-	var rect: Rect2 = _hud_rect()
-	draw_style_box(_rounded_box(Color(0.13, 0.08, 0.04, 0.18), Color(0.13, 0.08, 0.04, 0.0), 12), Rect2(rect.position + Vector2(2, 3), rect.size))
-	_draw_rounded_box(rect, Color("#7a5229"), Color("#5b3a1d"), 12, 1)
-	_draw_rounded_box(rect.grow(-3), Color("#a9793a"), Color("#8b612e"), 9, 1)
-	_draw_rounded_box(rect.grow(-7), Color("#f4dfb4"), Color("#d4b16d"), 6, 1)
+	HUDUI.draw_top_hud_bar(self, _hud_layout())
 
 
 
 func _draw_sidebar() -> void:
-	var rect: Rect2 = _left_dock_rect()
-	draw_style_box(_rounded_box(Color(0.13, 0.08, 0.04, 0.20), Color(0.13, 0.08, 0.04, 0.0), 16), Rect2(rect.position + Vector2(3, 5), rect.size))
-	_draw_rounded_box(rect, Color("#7a5a35"), Color("#5b4228"), 16, 2)
-	_draw_rounded_box(rect.grow(-5), Color("#f0ddb5"), Color("#c9a96a"), 12, 1)
-	_draw_rounded_box(_tool_pocket_rect(), Color(BG_CREAM), Color("#ead6aa"), 9, 1)
-	_draw_rounded_box(_menu_pocket_rect(), Color(BG_CREAM), Color("#ead6aa"), 9, 1)
-	draw_line(_tool_pocket_rect().position + Vector2(10, 10), _tool_pocket_rect().position + Vector2(_tool_pocket_rect().size.x - 10, 10), Color(0.50, 0.36, 0.18, 0.20), 1.0)
-	draw_line(_menu_pocket_rect().position + Vector2(10, 10), _menu_pocket_rect().position + Vector2(_menu_pocket_rect().size.x - 10, 10), Color(0.50, 0.36, 0.18, 0.20), 1.0)
-
-
-
-func _draw_farm_board() -> void:
-	var board_rect: Rect2 = _farm_board_rect()
-	draw_style_box(_rounded_box(Color(0.13, 0.08, 0.04, 0.20), Color(0.13, 0.08, 0.04, 0.0), 18), Rect2(board_rect.position + Vector2(4, 6), board_rect.size))
-	_draw_rounded_box(board_rect, Color("#7a552f"), Color("#5b3b21"), 18, 2)
-	_draw_rounded_box(board_rect.grow(-7), Color("#d3b16a"), Color("#9b713d"), 13, 1)
-	_draw_rounded_box(board_rect.grow(-14), Color("#c99a58"), Color("#8e6536"), 10, 1)
-	var plot_bed: Rect2 = _plot_bed_rect()
-	_draw_rounded_box(plot_bed, Color("#be8a50"), Color("#744923"), 10, 1)
-	for i in 10:
-		var grass_pos: Vector2 = Vector2(board_rect.position.x + 30 + i * 58, board_rect.end.y - 18 + (i % 2) * 5)
-		draw_line(grass_pos, grass_pos + Vector2(-5, -12), Color("#4f7f35"), 2.0)
-		draw_line(grass_pos, grass_pos + Vector2(6, -10), Color("#5c913f"), 2.0)
-
-
-
-func _draw_ui_panel(rect: Rect2) -> void:
-	draw_style_box(_rounded_box(Color(0.16, 0.10, 0.05, 0.18), Color(0.16, 0.10, 0.05, 0.0), 16), Rect2(rect.position + Vector2(3, 4), rect.size))
-	_draw_rounded_box(rect, Color("#7a5a35"), Color("#5b4228"), 16, 2)
-	_draw_rounded_box(rect.grow(-4), Color("#f0ddb5"), Color("#c9a96a"), 13, 1)
-	_draw_rounded_box(rect.grow(-14), Color("#fff8e8"), Color("#ead6aa"), 10, 1)
+	ToolPanelUI.draw_panel(self, _tool_panel_layout(), BG_CREAM)
 
 
 
@@ -1528,10 +1451,7 @@ func _draw_dialogue_popup() -> void:
 func _draw_message_toast() -> void:
 	if message_timer <= 0.0:
 		return
-	var rect: Rect2 = Rect2(_message_label_pos() - Vector2(8, 6), _message_label_size() + Vector2(16, 12))
-	draw_style_box(_rounded_box(Color(0.16, 0.10, 0.05, 0.18), Color(0.16, 0.10, 0.05, 0.0), 10), Rect2(rect.position + Vector2(2, 3), rect.size))
-	_draw_rounded_box(rect, Color("#d7bd78"), Color("#6a4d2e"), 10, 1)
-	_draw_rounded_box(rect.grow(-7), Color("#fff9e9"), Color("#e8d29d"), 6, 1)
+	BottomBarUI.draw_message_toast(self, _bottom_bar_layout())
 
 
 
@@ -1548,211 +1468,15 @@ func _draw_pause_overlay() -> void:
 
 
 func _draw_bottom_status_bar() -> void:
-	var rect: Rect2 = _bottom_status_rect()
-	draw_style_box(_rounded_box(Color(0.16, 0.10, 0.05, 0.18), Color(0.16, 0.10, 0.05, 0.0), 14), Rect2(rect.position + Vector2(3, 4), rect.size))
-	_draw_rounded_box(rect, Color("#d7bd78"), Color("#6a4d2e"), 14, 1)
-	_draw_rounded_box(rect.grow(-7), Color("#fff9e9"), Color("#e8d29d"), 10, 1)
-	var action_rect: Rect2 = _bottom_card_rect(0)
-	var plot_rect: Rect2 = _bottom_card_rect(1)
-	_draw_rounded_box(action_rect, Color("#fffdf2"), Color("#d8c78e"), 8, 1)
-	_draw_rounded_box(plot_rect, Color("#fffdf2"), Color("#d8c78e"), 8, 1)
-
-
-
-func _draw_farm() -> void:
-	for y in GRID_H:
-		for x in GRID_W:
-			var plot: Dictionary = plots[y][x]
-			var pos: Vector2 = farm_origin + Vector2(x * tile_size, y * tile_size)
-			var rect: Rect2 = Rect2(pos, Vector2(tile_size - 8, tile_size - 8))
-			var soil: Color = Color("#9b653d")
-			if (x + y) % 2 == 1:
-				soil = Color("#a56c42")
-			if bool(plot.get("planted", false)):
-				var moisture: int = int(plot.get("moisture", 0))
-				if moisture >= 2:
-					soil = Color("#6f4a34")
-				elif moisture == 1:
-					soil = Color("#8f6040")
-				else:
-					soil = Color("#bd8352")
-			draw_style_box(_rounded_box(Color(0.16, 0.10, 0.05, 0.18), Color(0.16, 0.10, 0.05, 0.0), 8), Rect2(rect.position + Vector2(3, 4), rect.size))
-			_draw_rounded_box(rect, soil, Color("#50321f"), 8, 2)
-			_draw_plot_texture(rect)
-			if bool(plot.get("planted", false)) and int(plot.get("moisture", 0)) <= 0:
-				_draw_dry_cracks(rect)
-			if bool(plot["composted"]):
-				_draw_compost_specks(rect)
-			_draw_plot_plant(rect, plot)
-			_draw_plot_state_markers(rect, plot)
-			if selected_cell == Vector2i(x, y):
-				_draw_rounded_box(rect.grow(4), Color(1.0, 1.0, 1.0, 0.0), Color("#ffe98a"), 10, 3)
-			if farmer_cell == Vector2i(x, y):
-				_draw_rounded_box(rect.grow(8), Color(1.0, 1.0, 1.0, 0.0), Color("#fff6c7"), 12, 2)
-
-
-
-func _draw_plot_state_markers(rect: Rect2, plot: Dictionary) -> void:
-	if not bool(plot.get("planted", false)):
-		return
-	var variety_index: int = int(plot["variety"])
-	_draw_variety_tag(rect, variety_index)
-	if bool(plot["watered"]):
-		_draw_water_drop(rect.position + Vector2(rect.size.x - 15, 15))
-		_draw_water_drop(rect.position + Vector2(rect.size.x - 27, 24))
-	if int(plot["stage"]) >= 3:
-		var ripe_days: int = int(plot.get("ripe_days", 0))
-		var ring_color: Color = Color("#f1cf5a")
-		if ripe_days == 1:
-			ring_color = Color("#fff07a")
-		elif ripe_days == 2:
-			ring_color = Color("#d9a24d")
-		elif ripe_days >= 3:
-			ring_color = Color("#6b3a2d")
-		_draw_rounded_box(rect.grow(5), Color(1.0, 1.0, 1.0, 0.0), ring_color, 12, 3)
-		if ripe_days == 1:
-			_draw_peak_sparkles(rect.position + rect.size * 0.5)
-
-
-
-func _draw_variety_tag(rect: Rect2, variety_index: int) -> void:
-	var marker_color: Color = _variety_marker_color(variety_index)
-	var marker_rect: Rect2 = Rect2(rect.end - Vector2(18, 18), Vector2(12, 12))
-	_draw_rounded_box(marker_rect, marker_color, Color("#2a1d14"), 3, 1)
-
-
-
-func _variety_marker_color(variety_index: int) -> Color:
-	match variety_index:
-		0:
-			return Color("#d65a4a")
-		1:
-			return Color("#4d3e9a")
-		2:
-			return Color("#f1d86a")
-		3:
-			return Color("#2f9f83")
-	return Color("#ffffff")
-
-
-
-func _draw_water_drop(pos: Vector2) -> void:
-	draw_circle(pos + Vector2(0, 3), 4, Color("#5ca4d8"))
-	draw_colored_polygon([pos + Vector2(0, -6), pos + Vector2(-4, 2), pos + Vector2(4, 2)], Color("#5ca4d8"))
-
-
-
-func _draw_peak_sparkles(center: Vector2) -> void:
-	for offset in [Vector2(-28, -24), Vector2(28, -20), Vector2(24, 24)]:
-		var p: Vector2 = center + offset
-		draw_line(p + Vector2(-4, 0), p + Vector2(4, 0), Color("#fff07a"), 2.0)
-		draw_line(p + Vector2(0, -4), p + Vector2(0, 4), Color("#fff07a"), 2.0)
-
-
-
-func _draw_dry_cracks(rect: Rect2) -> void:
-	for i in 3:
-		var start: Vector2 = rect.position + Vector2(16 + i * 17, 18 + (i % 2) * 18)
-		draw_line(start, start + Vector2(10, 5), Color(0.28, 0.16, 0.09, 0.55), 2.0)
-		draw_line(start + Vector2(10, 5), start + Vector2(16, 1), Color(0.28, 0.16, 0.09, 0.55), 1.5)
-
-
-
-func _draw_plot_texture(rect: Rect2) -> void:
-	for i in 3:
-		var y: float = rect.position.y + 20.0 + i * 16.0
-		draw_line(Vector2(rect.position.x + 12.0, y), Vector2(rect.end.x - 14.0, y + 2.0), Color(0.31, 0.18, 0.10, 0.45), 1.5)
-
-
-
-func _draw_compost_specks(rect: Rect2) -> void:
-	for i in 4:
-		var dot: Vector2 = rect.position + Vector2(14 + i * 13, rect.size.y - 18 - (i % 2) * 11)
-		draw_circle(dot, 3, Color("#d3b65b"))
-
-
-
-func _draw_plot_plant(rect: Rect2, plot: Dictionary) -> void:
-	if not bool(plot["planted"]):
-		if bool(plot.get("harvested_marker", false)):
-			var harvested_texture: Texture2D = _texture_from(crop_textures, "harvested")
-			if harvested_texture != null:
-				_draw_texture_centered(harvested_texture, rect.position + rect.size * 0.5 + Vector2(0, 1), Vector2(rect.size.x + 6.0, rect.size.y + 6.0))
-				return
-		draw_line(rect.position + Vector2(12, rect.size.y - 14), rect.end - Vector2(12, 14), Color("#6e3f27"), 2.0)
-		return
-	var center: Vector2 = rect.position + rect.size * 0.5
-	var crop_texture: Texture2D = _crop_texture_for_plot(plot)
-	if crop_texture != null:
-		var sprite_size: Vector2 = Vector2(rect.size.x + 8.0, rect.size.y + 8.0)
-		if crop_texture.get_width() > 64:
-			sprite_size = Vector2(rect.size.x + 22.0, rect.size.y + 22.0)
-		_draw_texture_centered(crop_texture, center + Vector2(0, 1), sprite_size)
-	else:
-		draw_line(center + Vector2(0, 22), center + Vector2(0, -14), Color("#6b3f24"), 6.0)
-		draw_circle(center + Vector2(0, -18), 16, Color("#3f8738"))
-	if bool(plot["bonus"]):
-		_draw_bee_icon(center + Vector2(23, -24), 0.72)
-	if _can_take_cutting(plot):
-		var clip_pos: Vector2 = rect.position + Vector2(16, 14)
-		draw_line(clip_pos + Vector2(0, 9), clip_pos + Vector2(0, -4), Color("#4f7f35"), 3.0)
-		draw_circle(clip_pos + Vector2(-5, -3), 4, Color("#8fcf5b"))
-		draw_circle(clip_pos + Vector2(5, -5), 4, Color("#8fcf5b"))
-
-
-
-func _crop_texture_for_plot(plot: Dictionary) -> Texture2D:
-	var stage: int = int(plot.get("stage", 0))
-	var variety_index: int = int(plot.get("variety", 0))
-	var progress: int = int(plot.get("progress", 0))
-	var grow_days: int = int(varieties[variety_index]["grow_days"])
-	if stage >= 3:
-		if variety_index == 2:
-			return _texture_from(crop_textures, "ripe_green")
-		return _texture_from(crop_textures, "ripe_purple")
-	if progress <= 0:
-		return _texture_from(crop_textures, "cutting")
-	if grow_days <= 2:
-		if progress <= 1:
-			return _texture_from(crop_textures, "young")
-		return _texture_from(crop_textures, "growing")
-	if progress == 1:
-		return _texture_from(crop_textures, "sprout")
-	if progress <= maxi(2, grow_days - 2):
-		return _texture_from(crop_textures, "young")
-	return _texture_from(crop_textures, "growing")
-
-
-
-func _draw_bee_icon(pos: Vector2, scale: float = 1.0) -> void:
-	draw_circle(pos + Vector2(-5, -5) * scale, 5.0 * scale, Color(1.0, 1.0, 1.0, 0.55))
-	draw_circle(pos + Vector2(5, -5) * scale, 5.0 * scale, Color(1.0, 1.0, 1.0, 0.55))
-	draw_circle(pos + Vector2(-3, 1) * scale, 6.0 * scale, Color("#ffd45c"))
-	draw_circle(pos + Vector2(3, 1) * scale, 6.0 * scale, Color("#ffd45c"))
-	draw_line(pos + Vector2(-3, -4) * scale, pos + Vector2(-3, 6) * scale, Color("#5d3b18"), 2.0 * scale)
-	draw_line(pos + Vector2(3, -4) * scale, pos + Vector2(3, 6) * scale, Color("#5d3b18"), 2.0 * scale)
-	draw_circle(pos + Vector2(9, 1) * scale, 3.0 * scale, Color("#2c1a14"))
-
-
+	BottomBarUI.draw_bottom_bar(self, _bottom_bar_layout())
 
 func _draw_side_scene() -> void:
-	_draw_farm_props()
-	if pollinator_garden:
-		var board: Rect2 = _farm_board_rect()
-		var flower_texture: Texture2D = _texture_from(item_textures, "flower")
-		for i in 10:
-			var flower_center: Vector2 = Vector2(board.position.x + 34.0 + float(i) * 34.0, board.end.y - 22.0 - float(i % 2) * 8.0)
-			if flower_texture != null:
-				_draw_texture_centered(flower_texture, flower_center, Vector2(28, 28))
-			else:
-				draw_line(flower_center + Vector2(0, 12), flower_center, Color("#3f7b35"), 2.0)
-				draw_circle(flower_center + Vector2(-4, 0), 4, Color("#d86f90"))
-				draw_circle(flower_center + Vector2(4, 0), 4, Color("#d86f90"))
-				draw_circle(flower_center + Vector2(0, -4), 4, Color("#ffd966"))
-		for i in 3:
-			_draw_bee_icon(Vector2(board.position.x + 84.0 + float(i) * 118.0, board.position.y + 28.0 + float(i % 2) * 30.0), 0.82)
-
-
+	FarmRenderer.draw_side_scene(
+		self,
+		_farm_board_rect(),
+		item_textures,
+		pollinator_garden
+	)
 
 func _current_tool_is_usable() -> bool:
 	var plot: Dictionary = plots[farmer_cell.y][farmer_cell.x]
@@ -1769,57 +1493,15 @@ func _current_tool_is_usable() -> bool:
 
 
 
-func _draw_farmer_tool_icon(pos: Vector2) -> void:
-	draw_circle(pos, 12, Color("#fff6df"))
-	draw_circle(pos, 12, Color("#4f3722"), false, 2.0)
-	var texture: Texture2D = _tool_texture(current_tool)
-	if texture != null:
-		_draw_texture_centered(texture, pos, Vector2(23, 23))
-		return
-	draw_circle(pos, 5, Color("#5d7f35"))
-
-
-
-func _draw_farm_props() -> void:
-	var barrel_pos: Vector2 = Vector2(174, 504)
-	var barrel_texture: Texture2D = _texture_from(item_textures, "barrel")
-	if barrel_texture != null:
-		_draw_texture_centered(barrel_texture, barrel_pos + Vector2(17, 26), Vector2(42, 54))
-	else:
-		_draw_rounded_box(Rect2(barrel_pos, Vector2(34, 52)), Color("#8e5a32"), Color("#4b2d1c"), 4, 2)
-		draw_rect(Rect2(barrel_pos + Vector2(4, 8), Vector2(26, 8)), Color("#5d7fa3"))
-	var sign_rect: Rect2 = Rect2(Vector2(828, 516), Vector2(58, 34))
-	var crate_texture: Texture2D = _texture_from(item_textures, "crate")
-	if crate_texture != null:
-		_draw_texture_centered(crate_texture, sign_rect.position + sign_rect.size * 0.5, Vector2(54, 42))
-	else:
-		_draw_rounded_box(sign_rect, Color("#a46b3a"), Color("#5a3520"), 4, 2)
-		draw_line(sign_rect.position + Vector2(8, 11), sign_rect.position + Vector2(sign_rect.size.x - 8, 11), Color("#754521"), 2.0)
-		draw_line(sign_rect.position + Vector2(8, 23), sign_rect.position + Vector2(sign_rect.size.x - 8, 23), Color("#754521"), 2.0)
-	draw_line(Vector2(204, 570), Vector2(832, 570), Color("#d4b16d"), 8.0)
-
-
-
 func _draw_farmer() -> void:
-	var bob: float = sin(farmer_step_bob) * 1.8
-	var base: Vector2 = farmer_pos + Vector2(0, bob)
-	draw_circle(base + Vector2(0, 18), 16, Color(0.13, 0.09, 0.05, 0.22))
-	draw_line(base + Vector2(-7, 8), base + Vector2(-11, 22), Color("#263b4d"), 4.0)
-	draw_line(base + Vector2(7, 8), base + Vector2(11, 22), Color("#263b4d"), 4.0)
-	draw_rect(Rect2(base + Vector2(-12, -19), Vector2(24, 28)), Color("#5f8f52"))
-	draw_rect(Rect2(base + Vector2(-12, -19), Vector2(24, 28)), Color("#2f4d2c"), false, 2.0)
-	draw_line(base + Vector2(-12, -8), base + Vector2(-24, 2), Color("#8b5a3c"), 4.0)
-	draw_line(base + Vector2(12, -8), base + Vector2(24, 2), Color("#8b5a3c"), 4.0)
-	draw_circle(base + Vector2(0, -30), 13, Color("#b7784e"))
-	draw_rect(Rect2(base + Vector2(-17, -44), Vector2(34, 7)), Color("#d2a64d"))
-	draw_colored_polygon([base + Vector2(-11, -43), base + Vector2(11, -43), base + Vector2(6, -56), base + Vector2(-6, -56)], Color("#d2a64d"))
-	draw_circle(base + Vector2(-4, -32), 2, Color("#2c1a14"))
-	draw_circle(base + Vector2(5, -32), 2, Color("#2c1a14"))
-	draw_line(base + Vector2(-4, -25), base + Vector2(5, -24), Color("#2c1a14"), 1.5)
-	if _current_tool_is_usable():
-		_draw_farmer_tool_icon(base + Vector2(27, -18))
-
-
+	FarmRenderer.draw_farmer(
+		self,
+		farmer_pos,
+		farmer_step_bob,
+		current_tool,
+		tool_textures,
+		_current_tool_is_usable()
+	)
 
 func _move_farmer(delta_cell: Vector2i) -> void:
 	var next_cell: Vector2i = farmer_cell + delta_cell
@@ -2469,15 +2151,15 @@ func _mark_ui_dirty() -> void:
 func _update_hud_labels() -> void:
 	if hud_labels.is_empty():
 		return
-	hud_labels["Day"].text = "📅 Day %s" % day
+	hud_labels["Day"].text = HUDUI.format_day(day)
 	hud_labels["Weather"].text = _weather_detail_text()
-	hud_labels["Coins"].text = "🪙 $%s" % coins
-	hud_labels["Water"].text = "💧 %s/%s" % [water, _max_water()]
-	hud_labels["Cuts"].text = "🌱 Cuts %s" % _total_cuttings()
-	hud_labels["Figs"].text = "Figs %s" % _total_figs()
-	hud_labels["Compost"].text = "🟤 Comp %s" % compost
-	hud_labels["Rep"].text = "♥ Trust %s" % reputation
-	hud_labels["Guide"].text = "📖 " + _tutorial_short_text()
+	hud_labels["Coins"].text = HUDUI.format_coins(coins)
+	hud_labels["Water"].text = HUDUI.format_water(water, _max_water())
+	hud_labels["Cuts"].text = HUDUI.format_cuttings(_total_cuttings())
+	hud_labels["Figs"].text = HUDUI.format_figs(_total_figs())
+	hud_labels["Compost"].text = HUDUI.format_compost(compost)
+	hud_labels["Rep"].text = HUDUI.format_reputation(reputation)
+	hud_labels["Guide"].text = HUDUI.format_guide(_tutorial_short_text())
 
 
 
@@ -2523,11 +2205,7 @@ func _update_ui() -> void:
 	clipping_row.visible = can_clip_cutting
 	clipping_button.disabled = not can_clip_cutting
 	clipping_button.text = "🌿 Clip cutting (C)"
-	controls_panel.visible = panel_open and side_tab == 0
-	market_panel.visible = panel_open and side_tab == 1
-	pantry_panel.visible = panel_open and side_tab == 2
-	guide_panel.visible = panel_open and side_tab == 3
-	help_panel.visible = panel_open and side_tab == 4
+	DrawerUI.apply_active_panel(_drawer_panels(), side_tab, panel_open)
 	for tab in tab_buttons.keys():
 		tab_buttons[tab].button_pressed = panel_open and int(tab) == side_tab
 	festival_label.text = _festival_text()

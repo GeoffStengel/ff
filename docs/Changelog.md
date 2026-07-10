@@ -34,3 +34,26 @@
   - scroll sizing
   - decorative drawing
 - main.gd now coordinates Village Requests instead of laying it out.
+
+### Rendering
+
+- Completed the FarmRenderer extraction for farm-scene drawing.
+- Moved plot plants, variety tags, ripe markers, peak sparkles, farm props, side-scene details, and farmer drawing into FarmRenderer.
+- Removed callback bridges from farm plot drawing.
+- main.gd now keeps the draw order and gameplay state while FarmRenderer owns pure farm visuals.
+- Fixed the missing FarmRenderer bee icon integration so pollinator visuals stay renderer-owned.
+
+### UI
+
+- Completed the HUDUI extraction for the top HUD.
+- Moved top HUD geometry, label widths, text formatting, and decorative bar drawing into HUDUI.
+- Removed the old HUD-only helpers from LayoutSystem.
+- Completed the BottomBarUI extraction for the bottom action/status area.
+- Moved bottom-bar geometry, action/plot card rectangles, message toast geometry, label placement, and decorative drawing into BottomBarUI.
+- Removed the old bottom-bar-only helpers from LayoutSystem.
+- Completed the ToolPanelUI extraction for the left dock/tool/menu panel.
+- Moved left dock geometry, pocket rectangles, row/label placement, button sizing, row spacing, and decorative dock drawing into ToolPanelUI.
+- Removed the old left-dock-only helpers from LayoutSystem.
+- Completed the DrawerUI extraction for the shared right-side drawer shell.
+- Moved drawer geometry, content/hint rectangles, shared panel sizing, active-panel visibility helper, and decorative drawer shell drawing into DrawerUI.
+- Removed the old drawer-only helpers from LayoutSystem.
