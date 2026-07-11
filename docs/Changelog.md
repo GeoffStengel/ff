@@ -67,3 +67,15 @@
 - Moved feature tab sizing, panel spacing, control minimum sizes, card backplate geometry, and pure display text helpers into the new modules.
 - Kept callbacks, gameplay state, inventory mutations, crop mutations, save/load, audio, and UI refresh orchestration in main.gd.
 - Added docs/ArchitectureMap.md to keep module ownership visible.
+
+### Systems
+
+- Completed WeatherSystem extraction into scripts/systems/weather_system.gd.
+- Moved weather definitions, lookups, seasonal rolling, temperature generation, weather formatting, rain/heat helpers, pollinator chance, and max-water calculation into WeatherSystem.
+- Kept current_weather and temperature_f state, day-transition timing, save/load coordination, sounds, messages, and UI refresh in main.gd.
+- Kept GameData.weather_table() as a compatibility delegate to WeatherSystem.weather_definitions().
+- Completed FestivalSystem, EconomySystem, and RelationshipSystem extraction.
+- Moved weekly table goal/resolution math into FestivalSystem.
+- Moved pricing, affordability, sale values, order payout math, and barrel water capacity math into EconomySystem.
+- Moved relationship score changes, customer bonuses, short names, summaries, and milestone reward deltas into RelationshipSystem.
+- Kept save keys, UI text, reward numbers, customer names, and current balance unchanged.

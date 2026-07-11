@@ -16,7 +16,10 @@ const AudioLibrary = preload("res://scripts/audio_library.gd")
 const SaveSystem = preload("res://scripts/save_system.gd")
 const OrderSystem = preload("res://scripts/order_system.gd")
 const InventorySystem = preload("res://scripts/inventory_system.gd")
-const WeatherSystem = preload("res://scripts/weather_system.gd")
+const WeatherSystem = preload("res://scripts/systems/weather_system.gd")
+const FestivalSystem = preload("res://scripts/systems/festival_system.gd")
+const EconomySystem = preload("res://scripts/systems/economy_system.gd")
+const RelationshipSystem = preload("res://scripts/systems/relationship_system.gd")
 const TextLibrary = preload("res://scripts/text_library.gd")
 const CropSystem = preload("res://scripts/crop_system.gd")
 const LayoutSystem = preload("res://scripts/layout_system.gd")
@@ -71,7 +74,7 @@ const SAVE_PATH := "user://fig_farmer_save.json"
 enum Tool { PLANT, WATER, COMPOST, HARVEST }
 
 var varieties: Array[Dictionary] = GameData.varieties()
-var weather_table: Array[Dictionary] = GameData.weather_table()
+var weather_table: Array[Dictionary] = WeatherSystem.weather_definitions()
 var current_tool: int = Tool.PLANT
 var selected_variety: int = 0
 var side_tab: int = 0
@@ -1759,7 +1762,7 @@ func _start_next_day() -> void:
 		extra_note
 	)
 
-	if (day - 1) % FESTIVAL_LENGTH == 0:
+	if FestivalSystem.should_resolve(day, FESTIVAL_LENGTH):
 		_resolve_festival_week(weather_name, summary_text)
 		return
 
@@ -1793,11 +1796,9 @@ func _fulfill_order() -> void:
 		_take_any_figs(need)
 	var customer: String = String(order_data["customer"])
 	_advance_tutorial(4)
-	var relationship_gain: int = 1
-	if int(order_data["patience"]) >= 3:
-		relationship_gain += 1
-	var new_friendship: int = int(relationships.get(customer, 0)) + relationship_gain
-	relationships[customer] = new_friendship
+	var relationship_gain: int = RelationshipSystem.order_completion_gain(int(order_data["patience"]))
+	relationships = RelationshipSystem.apply_change(relationships, customer, relationship_gain)
+	var new_friendship: int = RelationshipSystem.score_for(relationships, customer)
 	var milestone_note: String = _grant_relationship_milestone(customer, new_friendship)
 	festival_progress += need
 	coins += int(order_data["reward"])
@@ -1855,7 +1856,7 @@ func _buy_mason_jars() -> void:
 	var result: Dictionary = InventorySystem.buy_mason_jars(coins, mason_jars)
 
 	if not bool(result["ok"]):
-		_say("Three clean mason jars cost 6 coins.")
+		_say("Three clean mason jars cost %s coins." % EconomySystem.MASON_JARS_COST)
 		return
 
 	coins = int(result["coins"])
@@ -1912,6 +1913,7 @@ func _order_day_passed() -> Array[String]:
 	var result: Dictionary = OrderSystem.process_order_day(accepted_orders, relationships, reputation)
 	accepted_orders = result["accepted_orders"]
 	reputation = int(result["reputation"])
+	relationships = result["relationships"]
 	var expired_names: Array[String] = []
 	for expired_name in result["expired_names"]:
 		expired_names.append(String(expired_name))
@@ -1923,11 +1925,12 @@ func _order_day_passed() -> Array[String]:
 
 
 func _buy_cuttings() -> void:
-	var cost: int = int(varieties[selected_variety]["seed_cost"])
-	if coins < cost:
+	var cost: int = EconomySystem.cutting_cost(varieties, selected_variety)
+	var purchase: Dictionary = EconomySystem.purchase_result(coins, cost)
+	if not bool(purchase["ok"]):
 		_say("A %s starter tree costs %s coins." % [_variety_name(selected_variety), cost])
 		return
-	coins -= cost
+	coins = int(purchase["coins"])
 	cuttings[selected_variety] += 1
 	_play_sfx("sell")
 	_say("Bought one %s starter tree for planting." % _variety_name(selected_variety))
@@ -1935,25 +1938,27 @@ func _buy_cuttings() -> void:
 
 
 func _buy_compost() -> void:
-	if coins < 7:
-		_say("A compost bag costs 7 coins.")
+	var purchase: Dictionary = EconomySystem.purchase_result(coins, EconomySystem.COMPOST_BAG_COST, EconomySystem.COMPOST_BAG_QUANTITY)
+	if not bool(purchase["ok"]):
+		_say("A compost bag costs %s coins." % EconomySystem.COMPOST_BAG_COST)
 		return
-	coins -= 7
-	compost += 2
+	coins = int(purchase["coins"])
+	compost += int(purchase["quantity"])
 	_play_sfx("sell")
 	_say("Bought two compost bags.")
 
 
 
 func _buy_barrel_upgrade() -> void:
-	var cost: int = 18 + barrel_level * 10
-	if barrel_level >= 3:
+	var cost: int = EconomySystem.barrel_upgrade_cost(barrel_level)
+	if not EconomySystem.can_upgrade_barrel(barrel_level):
 		_say("The barrel is already as big as the stall can build.")
 		return
-	if coins < cost:
+	var purchase: Dictionary = EconomySystem.purchase_result(coins, cost)
+	if not bool(purchase["ok"]):
 		_say("The next barrel upgrade costs %s coins." % cost)
 		return
-	coins -= cost
+	coins = int(purchase["coins"])
 	barrel_level += 1
 	water = _max_water()
 	_play_sfx("sell")
@@ -1965,10 +1970,12 @@ func _buy_pollinator_garden() -> void:
 	if pollinator_garden:
 		_say("The pollinator garden is already blooming.")
 		return
-	if coins < 24:
-		_say("The pollinator garden costs 24 coins.")
+	var cost: int = EconomySystem.pollinator_garden_cost()
+	var purchase: Dictionary = EconomySystem.purchase_result(coins, cost)
+	if not bool(purchase["ok"]):
+		_say("The pollinator garden costs %s coins." % cost)
 		return
-	coins -= 24
+	coins = int(purchase["coins"])
 	pollinator_garden = true
 	_play_sfx("sell")
 	_say("Flowers planted by the fence. Sweet harvests are more likely.")
@@ -2233,15 +2240,15 @@ func _update_transient_ui() -> void:
 
 func _update_ui() -> void:
 	_update_hud_labels()
-	buy_cuttings_button.text = "🌱 %s tree        $%s" % [String(varieties[selected_variety]["short"]), int(varieties[selected_variety]["seed_cost"])]
-	if barrel_level < 3:
-		barrel_button.text = "▣ Barrel +        $%s" % (18 + barrel_level * 10)
+	buy_cuttings_button.text = "🌱 %s tree        $%s" % [String(varieties[selected_variety]["short"]), EconomySystem.cutting_cost(varieties, selected_variety)]
+	if EconomySystem.can_upgrade_barrel(barrel_level):
+		barrel_button.text = "▣ Barrel +        $%s" % EconomySystem.barrel_upgrade_cost(barrel_level)
 	else:
 		barrel_button.text = "▣ Barrel max"
 	if pollinator_garden:
 		garden_button.text = "🌸 Flowers done"
 	else:
-		garden_button.text = "🌸 Flowers        $24"
+		garden_button.text = "🌸 Flowers        $%s" % EconomySystem.pollinator_garden_cost()
 	garden_button.disabled = pollinator_garden
 	if game_paused:
 		pause_button.text = "▶ Resume"
@@ -2288,7 +2295,7 @@ func _update_ui() -> void:
 	relationship_label.text = _relationship_summary()
 	preserve_label.text = PantryUI.preserve_recipe_text()
 	logbook_label.text = _logbook_text()
-	buy_jars_button.disabled = coins < 6
+	buy_jars_button.disabled = not EconomySystem.can_afford(coins, EconomySystem.MASON_JARS_COST)
 	make_jam_button.disabled = _total_figs() < 5 or mason_jars <= 0
 	sell_jam_button.disabled = jam_jars <= 0
 	notebook_label.text = GuideUI.notebook_text(varieties[selected_variety])
@@ -2565,77 +2572,60 @@ func _plot_next_step_text(plot: Dictionary, days_left: int) -> String:
 
 
 
-func _resolve_festival_week(weather_name: String, day_summary: String = "") -> void:
-	if festival_progress >= festival_goal:
-		var overflow: int = festival_progress - festival_goal
-		var payout: int = 30 + festival_week * 8 + overflow * 2
-		coins += payout
-		reputation += 2
-		compost += 1
-		_log_event("Weekly table met: %s/%s figs, +$%s, Trust +2." % [festival_progress, festival_goal, payout])
-		var met_message: String = "Weekly table complete: +$%s, compost, Trust. %s" % [payout, day_summary]
-		_say(met_message.strip_edges())
-	else:
-		_log_event("Weekly table ended: %s/%s figs. No Trust loss." % [festival_progress, festival_goal])
-		var missed_message: String = "Weekly table ended %s/%s. No Trust loss. %s" % [festival_progress, festival_goal, day_summary]
-		_say(missed_message.strip_edges())
-	festival_week += 1
-	festival_goal = _festival_goal_for_week()
-	festival_progress = 0
+func _resolve_festival_week(_weather_name: String, day_summary: String = "") -> void:
+	var result: Dictionary = FestivalSystem.resolve_week({
+		"festival_week": festival_week,
+		"festival_goal": festival_goal,
+		"festival_progress": festival_progress,
+		"reputation": reputation
+	})
+
+	coins += int(result["coins_delta"])
+	reputation += int(result["reputation_delta"])
+	compost += int(result["compost_delta"])
+	_log_event(String(result["log_text"]))
+	var resolved_message: String = "%s %s" % [String(result["message_text"]), day_summary]
+	_say(resolved_message.strip_edges())
+
+	festival_week = int(result["next_week"])
+	festival_goal = int(result["next_goal"])
+	festival_progress = int(result["next_progress"])
 
 
 
 func _festival_goal_for_week() -> int:
-	return TextLibrary.festival_goal_for_week(festival_week, reputation)
+	return FestivalSystem.goal_for_week(festival_week, reputation)
 
 
 func _festival_text() -> String:
-	return TextLibrary.festival_text(festival_week, festival_progress, festival_goal, _festival_days_left())
+	return FestivalSystem.festival_text(festival_week, festival_progress, festival_goal, _festival_days_left())
 
 
 func _festival_days_left() -> int:
-	var elapsed: int = (day - 1) % FESTIVAL_LENGTH
-	return FESTIVAL_LENGTH - elapsed
+	return FestivalSystem.days_left(day, FESTIVAL_LENGTH)
 
 
 
 func _relationship_summary() -> String:
-	return TextLibrary.relationship_summary(relationships)
-
-
-func _customer_bonus(customer: String) -> int:
-	return OrderSystem.customer_bonus(customer, relationships)
+	return RelationshipSystem.relationship_summary(relationships)
 
 
 func _grant_relationship_milestone(customer: String, score: int) -> String:
-	if score != 3 and score != 6:
-		return ""
-	if score == 6:
-		coins += 25
-		return "%s sent a 25 coin thank-you purse." % _short_customer_name(customer)
-	match customer:
-		"Mara the baker":
-			compost += 2
-			return "Mara shared bakery compost."
-		"Oren the innkeeper":
-			water = _max_water()
-			return "Oren filled the barrel."
-		"Sel the jam maker":
-			cuttings[1] += 2
-			return "Sel saved Black Madeira cuttings for you."
-		"Niko the chef":
-			cuttings[2] += 2
-			return "Niko found White Madeira #1 cuttings."
-		"Tavi from the festival":
-			cuttings[3] += 3
-			festival_progress += 6
-			return "Tavi boosted the festival table with RdB cuttings."
-	return ""
+	var result: Dictionary = RelationshipSystem.milestone_result(customer, score)
+	coins += int(result["coins_delta"])
+	compost += int(result["compost_delta"])
+	if bool(result["water_to_max"]):
+		water = _max_water()
+	var cutting_delta: Array = result["cuttings_delta"] as Array
+	for i in mini(cuttings.size(), cutting_delta.size()):
+		cuttings[i] += int(cutting_delta[i])
+	festival_progress += int(result["festival_progress_delta"])
+	return String(result["message"])
 
 
 
 func _short_customer_name(customer: String) -> String:
-	return OrderSystem.short_customer_name(customer)
+	return RelationshipSystem.short_customer_name(customer)
 
 # ============================================================
 # VILLAGE REQUESTS TEXT FORMATTERS
@@ -2794,14 +2784,6 @@ func _season_name() -> String:
 	return WeatherSystem.season_name(day)
 
 
-func _season_base_temperature(season: String) -> int:
-	return WeatherSystem.season_base_temperature(season)
-
-
-func _roll_temperature(season: String) -> void:
-	temperature_f = WeatherSystem.roll_temperature(season, _weather_name())
-
-
 func _season_growing_note() -> String:
 	return WeatherSystem.season_growing_note(day)
 
@@ -2815,7 +2797,7 @@ func _pollinator_chance() -> float:
 
 
 func _max_water() -> int:
-	return WeatherSystem.max_water(BASE_MAX_WATER, barrel_level)
+	return EconomySystem.max_water(BASE_MAX_WATER, barrel_level)
 
 
 func _total_cuttings() -> int:

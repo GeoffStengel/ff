@@ -3,6 +3,9 @@
 # ============================================================
 extends RefCounted
 
+const EconomySystem = preload("res://scripts/systems/economy_system.gd")
+const RelationshipSystem = preload("res://scripts/systems/relationship_system.gd")
+
 # ============================================================
 # OrderSystem
 # ------------------------------------------------------------
@@ -36,11 +39,11 @@ static func make_order_offer(
 	var customer_name: String = String(pick.get("customer", "Customer"))
 
 	var need: int = randi_range(4 + reputation, 7 + reputation * 2)
-	var reward: int = (
-		need * 4
-		+ randi_range(6, 14)
-		+ maxi(0, variety_index) * 4
-		+ customer_bonus(customer_name, relationships)
+	var reward: int = EconomySystem.order_reward(
+		need,
+		variety_index,
+		randi_range(6, 14),
+		RelationshipSystem.bonus_for_customer(relationships, customer_name)
 	)
 
 	return {
@@ -52,11 +55,6 @@ static func make_order_offer(
 		"patience": 4,
 		"accepted": false
 	}
-
-
-static func customer_bonus(customer: String, relationships: Dictionary) -> int:
-	var relationship_score: int = int(relationships.get(customer, 0))
-	return int(floor(float(relationship_score) / 2.0)) * 3
 
 
 # ============================================================
@@ -260,6 +258,7 @@ static func process_order_day(
 ) -> Dictionary:
 	var kept_orders: Array[Dictionary] = []
 	var expired_names: Array[String] = []
+	var updated_relationships: Dictionary = relationships.duplicate(true)
 
 	for order_data in accepted_orders:
 		order_data["patience"] = int(order_data.get("patience", 0)) - 1
@@ -267,7 +266,7 @@ static func process_order_day(
 		if int(order_data["patience"]) <= 0:
 			var customer: String = String(order_data.get("customer", "Customer"))
 			reputation = maxi(0, reputation - 1)
-			relationships[customer] = maxi(0, int(relationships.get(customer, 0)) - 1)
+			updated_relationships = RelationshipSystem.apply_change(updated_relationships, customer, -1)
 			expired_names.append(short_customer_name(customer))
 		else:
 			kept_orders.append(order_data)
@@ -275,7 +274,8 @@ static func process_order_day(
 	return {
 		"accepted_orders": kept_orders,
 		"expired_names": expired_names,
-		"reputation": reputation
+		"reputation": reputation,
+		"relationships": updated_relationships
 	}
 
 # ============================================================
@@ -308,19 +308,7 @@ static func variety_short_name(
 
 
 static func short_customer_name(customer: String) -> String:
-	match customer:
-		"Mara the baker":
-			return "Mara"
-		"Oren the innkeeper":
-			return "Oren"
-		"Sel the jam maker":
-			return "Sel"
-		"Niko the chef":
-			return "Niko"
-		"Tavi from the festival":
-			return "Tavi"
-		_:
-			return customer
+	return RelationshipSystem.short_customer_name(customer)
 # ============================================================
 # /*=== ORDER SYSTEM FILE END ===*/
 # ============================================================

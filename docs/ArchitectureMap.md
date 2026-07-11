@@ -12,7 +12,10 @@
 - `scripts/inventory_system.gd`
 - `scripts/order_system.gd`
 - `scripts/save_system.gd`
-- `scripts/weather_system.gd`
+- `scripts/systems/economy_system.gd`
+- `scripts/systems/festival_system.gd`
+- `scripts/systems/relationship_system.gd`
+- `scripts/systems/weather_system.gd`
 - `scripts/game_data.gd`
 - `scripts/text_library.gd`
 

@@ -95,3 +95,33 @@ Complete Phase 3 UI modularization for Farm Controls, Pantry, Guide, and Help wi
 
 ### Next
 - Manually test every drawer tab, pantry actions, guide/help text, resize behavior, mobile-width layout, save/load, and audio.
+
+## 2026-07-10 WeatherSystem
+
+### Goal
+Extract weather rules and weather formatting without changing gameplay behavior, save keys, or visible weather layout.
+
+### Completed
+- Added scripts/systems/weather_system.gd as the owner for weather definitions, lookups, rolling, temperature generation, weather text/icon formatting, rain/heat helpers, pollinator chance, and max-water calculation.
+- main.gd now preloads the systems WeatherSystem and keeps only state ownership, day-transition timing, UI refresh, messages, sounds, and gameplay coordination.
+- GameData.weather_table() delegates to WeatherSystem.weather_definitions() so older callers stay compatible.
+- Removed the stale root weather_system.gd file and its generated UID sidecar.
+
+### Next
+- Manually test day advancement, Rain/Heat crop behavior, HUD weather text, weather visuals, and save/load with each weather type.
+
+## 2026-07-10 Festival/Economy/Relationship Systems
+
+### Goal
+Extract one bounded gameplay architecture batch without changing gameplay behavior, save compatibility, rewards, progression, or UI text.
+
+### Completed
+- Added FestivalSystem for weekly table goals, timing checks, resolution deltas, and weekly table text.
+- Added EconomySystem for prices, purchase checks, sale values, order reward math, and barrel water capacity math.
+- Added RelationshipSystem for score lookup/changes, customer bonuses, short customer names, relationship summary text, and milestone reward deltas.
+- main.gd now applies returned deltas and keeps state, input, sounds, messages, logs, save/load, and UI refresh.
+- InventorySystem keeps inventory mutation while delegating money math to EconomySystem.
+- OrderSystem keeps order state while delegating relationship bonus/name math to RelationshipSystem.
+
+### Next
+- Manually test buying, selling, order completion/expiration, relationship milestones, weekly table success/failure, and save/load around festival resolution.

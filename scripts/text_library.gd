@@ -3,6 +3,9 @@
 # ============================================================
 extends RefCounted
 
+const FestivalSystem = preload("res://scripts/systems/festival_system.gd")
+const RelationshipSystem = preload("res://scripts/systems/relationship_system.gd")
+
 static func how_to_play_text() -> String:
 	return "Goal\nGrow figs, learn cultivars, fill accepted orders, and build Trust.\n\nControls\nMove: WASD or arrow keys\nUse tool: F, Enter, or click\nInspect: I  |  Cuttings: C\nEnd day: Space  |  Pause: P/Esc\n\nFarm Loop\nPlant -> water -> wait for ripe figs -> harvest. Rain wets soil; heat dries it faster.\n\nOrders\nView offers freely. Accept only when you want the timer. Finished orders raise Trust.\n\nPantry\nStore figs, cuttings, jars, jam, and clone-ready trees."
 
@@ -104,9 +107,9 @@ static func progress_bar(current: int, maximum: int, width: int = 5) -> String:
 	var pieces: Array[String] = []
 	for i in width:
 		if i < filled:
-			pieces.append("?")
+			pieces.append("■")
 		else:
-			pieces.append("?")
+			pieces.append("□")
 	return "".join(pieces)
 
 
@@ -202,40 +205,19 @@ static func growth_stage_label(stage: int) -> String:
 
 
 static func festival_goal_for_week(festival_week: int, reputation: int) -> int:
-	var scaled_week: int = mini(festival_week, 8)
-	return clampi(20 + scaled_week * 4 + reputation * 2, 24, 60)
+	return FestivalSystem.goal_for_week(festival_week, reputation)
 
 
 static func festival_text(festival_week: int, festival_progress: int, festival_goal: int, days_left: int) -> String:
-	return "🍽 Weekly Table W%s  %s/%s figs  %s days\nOrders, jam, crates count. Bonus only." % [festival_week, festival_progress, festival_goal, days_left]
+	return FestivalSystem.festival_text(festival_week, festival_progress, festival_goal, days_left)
 
 
 static func relationship_summary(relationships: Dictionary) -> String:
-	var best_name: String = "No favorites yet"
-	var best_score: int = -1
-	for customer in relationships.keys():
-		var score: int = int(relationships[customer])
-		if score > best_score:
-			best_score = score
-			best_name = String(customer)
-	if best_score <= 0:
-		return "🤝 Friends: complete accepted orders"
-	return "🤝 Best: %s  Lv %s" % [short_customer_name(best_name), best_score]
+	return RelationshipSystem.relationship_summary(relationships)
 
 
 static func short_customer_name(customer: String) -> String:
-	match customer:
-		"Mara the baker":
-			return "Mara"
-		"Oren the innkeeper":
-			return "Oren"
-		"Sel the jam maker":
-			return "Sel"
-		"Niko the chef":
-			return "Niko"
-		"Tavi from the festival":
-			return "Tavi"
-	return customer
+	return RelationshipSystem.short_customer_name(customer)
 # ============================================================
 # /*=== TEXT LIBRARY FILE END ===*/
 # ============================================================

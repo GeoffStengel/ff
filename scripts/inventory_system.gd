@@ -3,6 +3,8 @@
 # ============================================================
 extends RefCounted
 
+const EconomySystem = preload("res://scripts/systems/economy_system.gd")
+
 static func pantry_figs_text(varieties: Array[Dictionary], fig_bins: Array[int]) -> String:
 	var lines: Array[String] = ["Figs"]
 	for i in varieties.size():
@@ -106,18 +108,19 @@ static func sell_jam(jam_jars: int) -> Dictionary:
 		return {"ok": false, "reason": "no_jam", "sold_jars": 0, "payout": 0, "festival_credit": 0, "jam_jars": jam_jars}
 
 	var sold_jars: int = jam_jars
-	var payout: int = sold_jars * 18
-	var festival_credit: int = sold_jars * 5
+	var payout: int = EconomySystem.jam_sale_value(sold_jars)
+	var festival_credit: int = EconomySystem.jam_festival_credit(sold_jars)
 
 	return {"ok": true, "sold_jars": sold_jars, "payout": payout, "festival_credit": festival_credit, "jam_jars": 0}
 
 
 static func buy_mason_jars(coins: int, mason_jars: int) -> Dictionary:
-	if coins < 6:
+	var purchase: Dictionary = EconomySystem.purchase_result(coins, EconomySystem.MASON_JARS_COST, EconomySystem.MASON_JARS_QUANTITY)
+	if not bool(purchase["ok"]):
 		return {"ok": false, "reason": "not_enough_coins", "coins": coins, "mason_jars": mason_jars}
 
-	coins -= 6
-	mason_jars += 3
+	coins = int(purchase["coins"])
+	mason_jars += int(purchase["quantity"])
 
 	return {"ok": true, "coins": coins, "mason_jars": mason_jars}
 
@@ -127,9 +130,8 @@ static func sell_crate(fig_bins: Array[int], varieties: Array[Dictionary]) -> Di
 	if total <= 0:
 		return {"ok": false, "reason": "no_figs", "total": 0, "payout": 0}
 
-	var payout: int = 0
+	var payout: int = EconomySystem.crate_value(fig_bins, varieties)
 	for i in fig_bins.size():
-		payout += fig_bins[i] * int(varieties[i]["value"])
 		fig_bins[i] = 0
 
 	return {"ok": true, "total": total, "payout": payout}

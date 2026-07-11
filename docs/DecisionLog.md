@@ -112,3 +112,31 @@ Benefits:
 - Feature tabs can be adjusted in their own files
 - main.gd keeps shrinking toward coordinator-only responsibilities
 - DrawerUI remains the shared shell while feature modules own internal drawer presentation
+
+## WeatherSystem Extraction
+
+Reason:
+Weather definitions, rolling, temperature rules, and weather text helpers belonged with pure gameplay systems instead of being split between GameData and main.gd wrappers.
+
+Decision:
+WeatherSystem now owns weather definitions, lookup helpers, seasonal rolling, temperature generation, weather text/icon formatting, rain/heat checks, pollinator chance, and max-water calculation. main.gd still stores current weather and temperature, decides when to roll weather, and coordinates crop updates, sounds, messages, UI refresh, and save/load. GameData delegates weather_table() to WeatherSystem for compatibility.
+
+Benefits:
+- One owner for weather rules and display text helpers
+- Save/load keys and numeric weather order stay compatible
+- CropSystem can keep using weather names without depending on WeatherSystem
+- FarmRenderer continues drawing weather visuals from passed weather data only
+
+## Festival, Economy, And Relationship Systems
+
+Reason:
+Weekly table rewards, price math, purchase checks, order reward bonuses, and relationship milestones were still embedded in main.gd, InventorySystem, OrderSystem, and TextLibrary.
+
+Decision:
+FestivalSystem owns weekly table goals, timing checks, resolution deltas, and equivalent weekly table text. EconomySystem owns prices, affordability, sale values, order payout math, and upgrade capacity math. RelationshipSystem owns score lookup/changes, customer bonuses, short names, summaries, and milestone reward deltas. main.gd still stores state and applies returned deltas while handling input, sounds, messages, logs, and UI refresh.
+
+Benefits:
+- Gameplay numbers have focused owners
+- Save keys and current balancing stay unchanged
+- InventorySystem still mutates inventory while EconomySystem owns money math
+- OrderSystem still owns order state while RelationshipSystem owns relationship math

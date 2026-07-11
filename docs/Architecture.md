@@ -20,6 +20,9 @@ main.gd
 |   |-- InventorySystem
 |   |-- OrderSystem
 |   |-- WeatherSystem
+|   |-- FestivalSystem
+|   |-- EconomySystem
+|   |-- RelationshipSystem
 |   |-- SaveSystem
 |   `-- ...
 |

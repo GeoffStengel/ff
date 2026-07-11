@@ -1,5 +1,7 @@
 extends RefCounted
 
+const WeatherSystem = preload("res://scripts/systems/weather_system.gd")
+
 static func varieties() -> Array[Dictionary]:
 	return [
 	{
@@ -54,12 +56,7 @@ static func varieties() -> Array[Dictionary]:
 
 
 static func weather_table() -> Array[Dictionary]:
-	return [
-	{"name": "Sunny", "description": "Steady growing weather.", "sky": "#dcecc8", "ground": "#9cc26f"},
-	{"name": "Rain", "description": "Trees start the day watered.", "sky": "#b9d5df", "ground": "#82b86f"},
-	{"name": "Heat", "description": "Watered trees get sweeter. Dry trees lose quality.", "sky": "#f2d59b", "ground": "#b9b45f"},
-	{"name": "Fog", "description": "Gentle mornings boost pollinator visits.", "sky": "#d9e1d8", "ground": "#91bb79"}
-]
+	return WeatherSystem.weather_definitions()
 
 
 static func relationships() -> Dictionary:

@@ -116,9 +116,10 @@ Target: <1500 lines
 - [x] Crop
 - [x] Inventory
 - [x] Orders
-- [ ] Weather
-- [ ] Festival
-- [ ] Economy
+- [x] Weather
+- [x] FestivalSystem
+- [x] EconomySystem
+- [x] RelationshipSystem
 
 ### Rendering
 - [x] FarmRenderer
