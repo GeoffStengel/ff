@@ -137,7 +137,7 @@ Target: <1500 lines
 
 ✅ v0.3.0 UI Modularization
 
-[ ] v0.4.0 Gameplay Architecture
+✅ v0.4.0 Gameplay Architecture
 
 [ ] v0.5.0 Content Expansion
 
