@@ -125,3 +125,50 @@ Extract one bounded gameplay architecture batch without changing gameplay behavi
 
 ### Next
 - Manually test buying, selling, order completion/expiration, relationship milestones, weekly table success/failure, and save/load around festival resolution.
+
+## 2026-07-10 Village Requests Visual Polish
+
+### Goal
+Polish the Village Requests screen into a cleaner delivery-app-style interface without changing order logic, payouts, timers, callbacks, save data, or gameplay behavior.
+
+### Completed
+- Tightened the weekly contract into a compact supporting card.
+- Made the selected request read as one unified hero card with status, customer, timer, request, payout, and one primary action.
+- Kept Accept/Fulfill as the only primary action row and moved Sell crate into a smaller secondary action below the request list.
+- Increased available request list space and switched request cards to compact two-line delivery-style summaries.
+- Added searchable VillageRequestsUI sections for weekly contract, hero card, primary action, available requests, secondary actions, and responsive layout.
+
+### Next
+- Manually test Orders tab selection, scroll behavior, Accept/Fulfill visibility, Sell crate, and narrower window sizes in Godot.
+
+
+
+## 2026-07-12 - Village Requests Pager Polish
+
+### Goal
+
+Clean up the Available Requests section and fix the request card overflowing the drawer.
+
+### Completed
+
+- Replaced the old request list with a one-card pager.
+- Added page count and compact previous/next arrow controls.
+- Synchronized pager navigation with the selected request.
+- Simplified request card text into a compact two-line summary.
+- Removed the obsolete request-list backplate.
+- Isolated Available Requests inside a fixed-width `request_pager_section`.
+- Moved request text into a clipped child Label.
+- Removed `order_page_button` from the generic Village Requests layout pass.
+- Fixed the request card overflowing outside the drawer.
+
+### Result
+
+Village Requests now has a cleaner hierarchy and a working Available Requests pager.
+
+The current build is a strong known-good fallback point before the next feature or architecture pass.
+
+### Next
+
+- Update the repository.
+- Create a known-good checkpoint commit/tag.
+- Continue UI/UX polish and bounded `main.gd` cleanup.

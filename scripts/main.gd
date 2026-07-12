@@ -194,8 +194,131 @@ var crop_textures: Dictionary = {}
 var item_textures: Dictionary = {}
 var ui_textures: Dictionary = {}
 var tool_textures: Dictionary = {}
-
+#============================================================
 # /*=== NODE / UI REFERENCES END ===*/
+#============================================================
+
+# ============================================================
+# /*=== VILLAGE REQUESTS PAGER STATE START ===*/
+# ============================================================
+
+var order_page: int = 0
+var order_page_label: Label
+var order_page_button: Button
+var order_page_text_label: Label
+var order_previous_button: Button
+var order_next_button: Button
+
+# ============================================================
+# /*=== VILLAGE REQUESTS PAGER STATE END ===*/
+# ============================================================
+
+# ============================================================
+# /*=== SELECT ORDER PAGE CARD START ===*/
+# ------------------------------------------------------------
+# Selects the order currently displayed by the pager card.
+# ============================================================
+
+func _select_order_page_card() -> void:
+	var total_orders: int = OrderSystem.order_count(
+		accepted_orders,
+		order_offers
+	)
+
+	if total_orders <= 0:
+		return
+
+	order_page = clampi(order_page, 0, total_orders - 1)
+	_select_order_slot(order_page)
+
+# ============================================================
+# /*=== SELECT ORDER PAGE CARD END ===*/
+# ============================================================
+# ============================================================
+# /*=== ORDER PAGE NAVIGATION START ===*/
+# ============================================================
+
+func _show_previous_order_page() -> void:
+	order_page -= 1
+	_normalize_order_page()
+	_select_order_slot(order_page)
+
+
+func _show_next_order_page() -> void:
+	order_page += 1
+	_normalize_order_page()
+	_select_order_slot(order_page)
+
+# ============================================================
+# /*=== ORDER PAGE NAVIGATION END ===*/
+# ============================================================
+# ============================================================
+# /*=== ORDER PAGER UPDATE START ===*/
+# ============================================================
+
+func _normalize_order_page() -> void:
+	var total_orders: int = OrderSystem.order_count(
+		accepted_orders,
+		order_offers
+	)
+
+	if total_orders <= 0:
+		order_page = 0
+		return
+
+	order_page = clampi(order_page, 0, total_orders - 1)
+
+
+func _update_order_pager() -> void:
+	if (
+		order_page_label == null
+		or order_page_button == null
+		or order_page_text_label == null
+		or order_previous_button == null
+		or order_next_button == null
+	):
+		return
+
+	var total_orders: int = OrderSystem.order_count(
+		accepted_orders,
+		order_offers
+	)
+
+	if total_orders <= 0:
+		order_page = 0
+		order_page_label.text = "0 / 0"
+		order_page_text_label.text = "No available requests"
+
+		order_page_button.disabled = true
+		order_page_button.button_pressed = false
+		order_previous_button.disabled = true
+		order_next_button.disabled = true
+		return
+
+	_normalize_order_page()
+
+	order_page_label.text = "%s / %s" % [
+		order_page + 1,
+		total_orders
+	]
+
+	order_page_text_label.text = OrderSystem.order_button_text(
+		order_page,
+		accepted_orders,
+		order_offers,
+		varieties
+	)
+
+	order_page_button.disabled = false
+	order_page_button.button_pressed = selected_order_index == order_page
+
+	order_previous_button.disabled = order_page <= 0
+	order_next_button.disabled = order_page >= total_orders - 1
+	# ============================================================ 
+	# /*=== ORDER PAGER UPDATE END ===*/ 
+	# ============================================================
+
+
 
 func _ready() -> void:
 	randomize()
@@ -843,44 +966,178 @@ func _build_ui() -> void:
 	_style_label(order_label, 14, Color("#3b2b19"))
 	market_panel.add_child(order_label)
 
-	# Primary action row: keep the main request action visually dominant.
-	# The inactive button is hidden in _update_ui(), so this row does not
-	# waste space showing both Accept and Fulfill at the same time.
+	# Primary action row: keep the current request action visually dominant.
+	# Sell crate lives below the scroll list as a secondary market action.
 	var market_row: HBoxContainer = HBoxContainer.new()
 	market_row.add_theme_constant_override("separation", int(UIConstants.CARD_GAP))
 	market_panel.add_child(market_row)
 
 	accept_order_button = Button.new()
-	accept_order_button.text = "Accept Order"
+	accept_order_button.text = "ACCEPT ORDER"
 	accept_order_button.custom_minimum_size = VillageRequestsUI.action_button_minimum_size()
 	_style_button(accept_order_button, 13, "action")
 	accept_order_button.pressed.connect(func() -> void: call("_accept_selected_order"))
 	market_row.add_child(accept_order_button)
 
 	fulfill_order_button = Button.new()
-	fulfill_order_button.text = "Fulfill"
+	fulfill_order_button.text = "FULFILL ORDER"
 	fulfill_order_button.custom_minimum_size = VillageRequestsUI.action_button_minimum_size()
 	_style_button(fulfill_order_button, 13, "action")
 	fulfill_order_button.pressed.connect(func() -> void: call("_fulfill_order"))
 	market_row.add_child(fulfill_order_button)
 
-	crate_button = Button.new()
-	crate_button.text = "Sell crate"
-	crate_button.custom_minimum_size = VillageRequestsUI.action_button_minimum_size()
-	_style_button(crate_button, 13, "secondary")
-	crate_button.pressed.connect(_sell_crate)
-	market_row.add_child(crate_button)
+	# ============================================================
+	# /*=== AVAILABLE REQUESTS PAGER START ===*/
+	# ------------------------------------------------------------
+	# The pager is isolated inside a fixed-width VBoxContainer.
+	#
+	# Why:
+	# - market_panel may be wider than the visible request column.
+	# - the pager card must never inherit that extra width.
+	# - the text lives in a child Label, so text cannot force the
+	#   clickable Button wider.
+	#
+	# The pager section owns its width. Its children only fill the
+	# pager section, not the entire market_panel.
+	# ============================================================
 
-	_add_market_section_label(market_panel, "AVAILABLE REQUESTS")
-	order_scroll = ScrollContainer.new()
-	order_scroll.custom_minimum_size = VillageRequestsUI.request_list_minimum_size(content)
-	market_panel.add_child(order_scroll)
+	var request_pager_width: float = VillageRequestsUI.action_button_minimum_size().x
 
-	order_list = VBoxContainer.new()
-	order_list.add_theme_constant_override("separation", int(UIConstants.CARD_GAP))
-	order_scroll.add_child(order_list)
-	for i in 5:
-		_add_order_button(order_list, i)
+	var request_pager_section: VBoxContainer = VBoxContainer.new()
+	request_pager_section.custom_minimum_size = Vector2(
+		request_pager_width,
+		0.0
+	)
+	request_pager_section.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	request_pager_section.add_theme_constant_override(
+		"separation",
+		4
+	)
+	market_panel.add_child(request_pager_section)
+
+	# ============================================================
+	# /*=== AVAILABLE REQUESTS HEADER START ===*/
+	# ============================================================
+
+	var available_header_row: HBoxContainer = HBoxContainer.new()
+	available_header_row.custom_minimum_size = Vector2(
+		request_pager_width,
+		18.0
+	)
+	available_header_row.size_flags_horizontal = Control.SIZE_FILL
+	available_header_row.add_theme_constant_override(
+		"separation",
+		int(UIConstants.CARD_GAP)
+	)
+	request_pager_section.add_child(available_header_row)
+
+	var available_requests_label: Label = Label.new()
+	available_requests_label.text = "AVAILABLE REQUESTS"
+	available_requests_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_label(available_requests_label, 10, Color("#725431"))
+	available_header_row.add_child(available_requests_label)
+
+	order_page_label = Label.new()
+	order_page_label.text = "0 / 0"
+	order_page_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	order_page_label.custom_minimum_size = Vector2(52.0, 18.0)
+	order_page_label.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_style_label(order_page_label, 11, Color("#725431"))
+	available_header_row.add_child(order_page_label)
+
+	# ============================================================
+	# /*=== AVAILABLE REQUESTS HEADER END ===*/
+	# ============================================================
+
+	# ============================================================
+	# /*=== AVAILABLE REQUEST CARD START ===*/
+	# ------------------------------------------------------------
+	# The Button is intentionally text-free.
+	# The child Label owns display text and clips inside the card.
+	# ============================================================
+
+	order_page_button = Button.new()
+	order_page_button.toggle_mode = true
+	order_page_button.text = ""
+	order_page_button.custom_minimum_size = Vector2(
+		request_pager_width,
+		UIConstants.REQUEST_CARD_HEIGHT
+	)
+	order_page_button.size_flags_horizontal = Control.SIZE_FILL
+	order_page_button.clip_contents = true
+	_style_button(order_page_button, 12, "secondary")
+	order_page_button.pressed.connect(_select_order_page_card)
+	request_pager_section.add_child(order_page_button)
+
+	order_page_text_label = Label.new()
+	order_page_text_label.set_anchors_and_offsets_preset(
+		Control.PRESET_FULL_RECT
+	)
+	order_page_text_label.offset_left = 10.0
+	order_page_text_label.offset_top = 6.0
+	order_page_text_label.offset_right = -10.0
+	order_page_text_label.offset_bottom = -6.0
+	order_page_text_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	order_page_text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	order_page_text_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	order_page_text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	order_page_text_label.clip_text = true
+	order_page_text_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_style_label(order_page_text_label, 12, Color("#3b2b19"))
+	order_page_button.add_child(order_page_text_label)
+
+	# ============================================================
+	# /*=== AVAILABLE REQUEST CARD END ===*/
+	# ============================================================
+
+	# ============================================================
+	# /*=== ORDER PAGER NAVIGATION START ===*/
+	# ------------------------------------------------------------
+	# Navigation lives inside the same fixed-width pager section.
+	# Flexible space pushes the compact arrow buttons to the right.
+	# ============================================================
+
+	var order_navigation_row: HBoxContainer = HBoxContainer.new()
+	order_navigation_row.custom_minimum_size = Vector2(
+		request_pager_width,
+		30.0
+	)
+	order_navigation_row.size_flags_horizontal = Control.SIZE_FILL
+	order_navigation_row.add_theme_constant_override(
+		"separation",
+		int(UIConstants.CARD_GAP)
+	)
+	request_pager_section.add_child(order_navigation_row)
+
+	var navigation_spacer: Control = Control.new()
+	navigation_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	order_navigation_row.add_child(navigation_spacer)
+
+	order_previous_button = Button.new()
+	order_previous_button.text = "◀"
+	order_previous_button.tooltip_text = "Previous request"
+	order_previous_button.custom_minimum_size = Vector2(48.0, 30.0)
+	_style_button(order_previous_button, 14, "secondary")
+	order_previous_button.pressed.connect(_show_previous_order_page)
+	order_navigation_row.add_child(order_previous_button)
+
+	order_next_button = Button.new()
+	order_next_button.text = "▶"
+	order_next_button.tooltip_text = "Next request"
+	order_next_button.custom_minimum_size = Vector2(48.0, 30.0)
+	_style_button(order_next_button, 14, "secondary")
+	order_next_button.pressed.connect(_show_next_order_page)
+	order_navigation_row.add_child(order_next_button)
+
+	# ============================================================
+	# /*=== ORDER PAGER NAVIGATION END ===*/
+	# ============================================================
+
+	# ============================================================
+	# /*=== AVAILABLE REQUESTS PAGER END ===*/
+	# ============================================================
+
+
 
 	# Compact supporting info. These stay below the request list so they
 	# do not compete with the selected request and primary action button.
@@ -906,6 +1163,8 @@ func _build_ui() -> void:
 	# ============================================================
 	# /*=== VILLAGE REQUESTS CONTROLS END ===*/
 	# ============================================================
+
+
 
 	pantry_panel = VBoxContainer.new()
 	pantry_panel.position = drawer_content_rect.position
@@ -1129,8 +1388,8 @@ func _village_requests_controls() -> Dictionary:
 		"accept_button": accept_order_button,
 		"fulfill_button": fulfill_order_button,
 		"crate_button": crate_button,
-		"order_scroll": order_scroll,
-		"order_buttons": order_buttons,
+		# Pager width is owned locally by request_pager_section.
+		# Do not pass order_page_button to VillageRequestsUI.apply_layout().
 		"inventory_label": inventory_label,
 		"relationship_label": relationship_label,
 		"logbook_label": logbook_label
@@ -2663,8 +2922,10 @@ func _order_button_text(index: int) -> String:
 
 func _update_order_buttons() -> void:
 	var total: int = _order_count()
+
 	for i in order_buttons.size():
 		var button: Button = order_buttons[i]
+
 		if i < total:
 			button.visible = true
 			button.text = _order_button_text(i)
@@ -2674,12 +2935,18 @@ func _update_order_buttons() -> void:
 			button.visible = false
 			button.disabled = true
 
+	_update_order_pager()
 
 
 func _select_order_slot(slot: int) -> void:
-	selected_order_index = clampi(slot, 0, maxi(0, _order_count() - 1))
-	_update_ui()
+	selected_order_index = clampi(
+		slot,
+		0,
+		maxi(0, _order_count() - 1)
+	)
 
+	order_page = selected_order_index
+	_update_ui()
 
 
 func _selected_order() -> Dictionary:

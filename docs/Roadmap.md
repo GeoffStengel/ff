@@ -110,6 +110,7 @@ Target: <1500 lines
 - [x] GuideUI
 - [x] HelpUI
 - [x] Feature modules complete
+- [x] Village Requests visual polish
 
 ### Systems
 - [x] Save

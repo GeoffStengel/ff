@@ -67,6 +67,9 @@
 - Moved feature tab sizing, panel spacing, control minimum sizes, card backplate geometry, and pure display text helpers into the new modules.
 - Kept callbacks, gameplay state, inventory mutations, crop mutations, save/load, audio, and UI refresh orchestration in main.gd.
 - Added docs/ArchitectureMap.md to keep module ownership visible.
+- Polished the Village Requests screen into a cleaner delivery-app-style layout.
+- Made the selected request a single hero card with the primary Accept/Fulfill action.
+- Moved Sell crate out of the primary action row and expanded the available request list area.
 
 ### Systems
 

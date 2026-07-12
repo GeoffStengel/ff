@@ -35,29 +35,29 @@ const Layout = preload("res://scripts/ui/layout.gd")
 # ============================================================
 
 const CONTENT_W := 340.0
-const HEADER_H := 34.0
+const HEADER_H := 30.0
 const SECTION_LABEL_H := 12.0
-const SUPPORT_LABEL_H := 20.0
-const LOGBOOK_H := 34.0
+const SUPPORT_LABEL_H := 16.0
+const LOGBOOK_H := 24.0
 
 const WEEKLY_BACKPLATE_H := UIConstants.WEEKLY_CARD_HEIGHT
-const CURRENT_BACKPLATE_H := UIConstants.HERO_CARD_HEIGHT
-const ACTION_BACKPLATE_H := UIConstants.BUTTON_HEIGHT + UIConstants.CARD_PADDING * 2.0
-const LIST_BACKPLATE_H := 176.0
+const CURRENT_BACKPLATE_H := 164.0
+const LIST_BACKPLATE_MIN_H := 146.0
 
-const WEEKLY_LABEL_H := 54.0
-const CURRENT_LABEL_H := 126.0
-const REQUEST_LIST_H := 150.0
-const ACTION_BUTTON_W := 108.0
+const WEEKLY_LABEL_H := 44.0
+const CURRENT_LABEL_H := 94.0
+const REQUEST_LIST_MIN_H := 112.0
+const ACTION_BUTTON_W := 316.0
 
 const PANEL_LEFT_PAD := 20.0
-const CONTRACT_Y := 46.0
+const CONTRACT_Y := 42.0
 const BACKPLATE_GAP := UIConstants.CARD_GAP
 const INNER_PAD := UIConstants.CARD_PADDING
 
 # ============================================================
 # /*=== VILLAGE REQUESTS CONSTANTS END ===*/
 # ============================================================
+
 
 
 # ============================================================
@@ -69,8 +69,18 @@ static func panel_position(drawer_content_position: Vector2) -> Vector2:
 
 
 static func panel_size(drawer_content_size: Vector2) -> Vector2:
-	return Vector2(CONTENT_W, drawer_content_size.y)
+	var available_width: float = maxf(
+		1.0,
+		drawer_content_size.x - PANEL_LEFT_PAD * 2.0
+	)
 
+	return Vector2(
+		minf(CONTENT_W, available_width),
+		drawer_content_size.y
+	)
+
+static func safe_content_width(content: Rect2) -> float:
+	return panel_size(content.size).x
 
 static func content_rect(drawer_content_position: Vector2, drawer_content_size: Vector2) -> Rect2:
 	return Rect2(drawer_content_position, drawer_content_size)
@@ -81,65 +91,98 @@ static func content_rect(drawer_content_position: Vector2, drawer_content_size: 
 
 
 # ============================================================
-# /*=== VILLAGE REQUESTS LAYOUT MAP START ===*/
+# /*=== RESPONSIVE LAYOUT START ===*/
+# ------------------------------------------------------------
+# Village Requests uses three major rows:
+# 1. Weekly contract
+# 2. Current request hero card
+# 3. Paged available request card
+#
+# Sell Crate no longer belongs to this screen, so the request
+# list receives all remaining vertical space.
 # ============================================================
 
 static func build_orderbook_layout(content: Rect2) -> Dictionary:
-	var page: Rect2 = Layout.with_width(content, minf(CONTENT_W, content.size.x))
-	var row_heights: Array[float] = [
-		WEEKLY_BACKPLATE_H,
-		CURRENT_BACKPLATE_H,
-		ACTION_BACKPLATE_H,
-		LIST_BACKPLATE_H
-	]
+	var page: Rect2 = Layout.with_width(
+		content,
+		safe_content_width(content)
+	)
+
+	var fixed_height: float = (
+		CONTRACT_Y
+		+ WEEKLY_BACKPLATE_H
+		+ CURRENT_BACKPLATE_H
+		+ BACKPLATE_GAP * 2.0
+	)
+
+	var available_list_h: float = maxf(
+		1.0,
+		page.size.y
+			- fixed_height
+			- UIConstants.CARD_PADDING
+	)
+
 	var rows: Array[Rect2] = Layout.vertical_stack(
 		page.position + Vector2(0.0, CONTRACT_Y),
 		page.size.x,
-		row_heights,
+		[
+			WEEKLY_BACKPLATE_H,
+			CURRENT_BACKPLATE_H,
+			available_list_h
+		],
 		BACKPLATE_GAP
 	)
 
 	var weekly: Rect2 = rows[0]
 	var current: Rect2 = rows[1]
-	var action: Rect2 = rows[2]
-	var list: Rect2 = rows[3]
-	var action_inner: Rect2 = Layout.inset(action, INNER_PAD)
+	var list: Rect2 = rows[2]
+
+	var current_inner: Rect2 = Layout.inset(
+		current,
+		INNER_PAD
+	)
+
+	var primary_button: Rect2 = Rect2(
+		current_inner.position + Vector2(
+			0.0,
+			current_inner.size.y - UIConstants.BUTTON_HEIGHT
+		),
+		Vector2(
+			current_inner.size.x,
+			UIConstants.BUTTON_HEIGHT
+		)
+	)
+
+	var current_text: Rect2 = Rect2(
+		current_inner.position,
+		Vector2(
+			current_inner.size.x,
+			maxf(
+				0.0,
+				current_inner.size.y
+					- UIConstants.BUTTON_HEIGHT
+					- UIConstants.INNER_GAP
+			)
+		)
+	)
 
 	return {
 		"page": page,
+
 		"weekly": weekly,
 		"current": current,
-		"action": action,
 		"list": list,
+
 		"weekly_inner": Layout.inset(weekly, INNER_PAD),
-		"current_inner": Layout.inset(current, INNER_PAD),
-		"action_inner": action_inner,
+		"current_inner": current_inner,
+		"current_text": current_text,
 		"list_inner": Layout.inset(list, INNER_PAD),
-		"action_button": Layout.center_in(action_inner, Vector2(action_inner.size.x, UIConstants.BUTTON_HEIGHT))
-	}
 
-
-static func card_backplates(content: Rect2) -> Array[Rect2]:
-	var layout: Dictionary = build_orderbook_layout(content)
-	var result: Array[Rect2] = []
-	result.append(layout["weekly"])
-	result.append(layout["current"])
-	result.append(layout["action"])
-	result.append(layout["list"])
-	return result
-
-
-static func inner_padded_rects(content: Rect2) -> Dictionary:
-	var layout: Dictionary = build_orderbook_layout(content)
-	return {
-		"weekly": layout["weekly_inner"],
-		"current": layout["current_inner"],
-		"action": layout["action_inner"],
-		"list": layout["list_inner"]
+		"primary_button": primary_button
 	}
 
 # ============================================================
-# /*=== VILLAGE REQUESTS LAYOUT MAP END ===*/
+# /*=== RESPONSIVE LAYOUT END ===*/
 # ============================================================
 
 
@@ -148,56 +191,128 @@ static func inner_padded_rects(content: Rect2) -> Dictionary:
 # ============================================================
 
 static func title_minimum_size(content: Rect2) -> Vector2:
-	return Vector2(minf(CONTENT_W, content.size.x), HEADER_H)
+	return Vector2(
+		safe_content_width(content),
+		HEADER_H
+	)
 
 
 static func section_label_minimum_size(content: Rect2) -> Vector2:
-	return Vector2(minf(CONTENT_W, content.size.x), SECTION_LABEL_H)
+	return Vector2(
+		safe_content_width(content),
+		SECTION_LABEL_H
+	)
 
+# ============================================================
+# /*=== WEEKLY CONTRACT START ===*/
+# ============================================================
 
 static func weekly_contract_minimum_size(content: Rect2) -> Vector2:
 	var layout: Dictionary = build_orderbook_layout(content)
 	return Vector2(layout["weekly_inner"].size.x, WEEKLY_LABEL_H)
 
+# ============================================================
+# /*=== WEEKLY CONTRACT END ===*/
+# ============================================================
+
+
+# ============================================================
+# /*=== CURRENT REQUEST HERO CARD START ===*/
+# ============================================================
 
 static func current_request_minimum_size(content: Rect2) -> Vector2:
 	var layout: Dictionary = build_orderbook_layout(content)
-	return Vector2(layout["current_inner"].size.x, CURRENT_LABEL_H)
+	return Vector2(layout["current_text"].size.x, CURRENT_LABEL_H)
 
+# ============================================================
+# /*=== CURRENT REQUEST HERO CARD END ===*/
+# ============================================================
+
+
+# ============================================================
+# /*=== PRIMARY ACTION START ===*/
+# ============================================================
 
 static func action_button_minimum_size() -> Vector2:
 	return Vector2(ACTION_BUTTON_W, UIConstants.BUTTON_HEIGHT)
 
+# ============================================================
+# /*=== PRIMARY ACTION END ===*/
+# ============================================================
+
+
+
+# ============================================================
+# /*=== AVAILABLE REQUESTS START ===*/
+# ------------------------------------------------------------
+# The list uses only the space allocated by the orderbook
+# layout. ScrollContainer handles additional request cards.
+# ============================================================
 
 static func request_list_rect(content: Rect2) -> Rect2:
 	var layout: Dictionary = build_orderbook_layout(content)
-	var inner: Rect2 = layout["list_inner"]
-	return Rect2(inner.position, Vector2(inner.size.x, REQUEST_LIST_H))
+	return layout["list_inner"]
 
 
 static func request_list_minimum_size(content: Rect2) -> Vector2:
-	return request_list_rect(content).size
+	var list_rect: Rect2 = request_list_rect(content)
+
+	return Vector2(
+		list_rect.size.x,
+		maxf(1.0, list_rect.size.y)
+	)
 
 
 static func request_card_minimum_size(content: Rect2) -> Vector2:
-	var list_rect: Rect2 = request_list_rect(content)
-	return Vector2(list_rect.size.x, UIConstants.REQUEST_CARD_HEIGHT)
+	return Vector2(
+		safe_content_width(content),
+		UIConstants.REQUEST_CARD_HEIGHT
+	)
 
+# ============================================================
+# /*=== AVAILABLE REQUESTS END ===*/
+# ============================================================
 
 static func support_label_minimum_size(content: Rect2) -> Vector2:
-	return Vector2(minf(CONTENT_W, content.size.x), SUPPORT_LABEL_H)
+	return Vector2(
+		safe_content_width(content),
+		SUPPORT_LABEL_H
+	)
 
 
 static func logbook_minimum_size(content: Rect2) -> Vector2:
-	return Vector2(minf(CONTENT_W, content.size.x), LOGBOOK_H)
+	return Vector2(
+		safe_content_width(content),
+		LOGBOOK_H
+	)
 
 
 static func action_button_rect(content: Rect2) -> Rect2:
 	var layout: Dictionary = build_orderbook_layout(content)
-	return layout["action_button"]
-
+	return layout["primary_button"]
 # ============================================================
 # /*=== CONTROL SIZE HELPERS END ===*/
+# ============================================================
+
+# ============================================================
+# /*=== CARD BACKPLATES START ===*/
+# ------------------------------------------------------------
+# Weekly Contract and Current Request use custom-drawn cards.
+#
+# Available Requests now uses a real styled Button pager card,
+# so it no longer needs a second custom backplate behind it.
+# ============================================================
+
+static func card_backplates(content: Rect2) -> Array[Rect2]:
+	var layout: Dictionary = build_orderbook_layout(content)
+
+	return [
+		layout["weekly"],
+		layout["current"]
+	]
+
+# ============================================================
+# /*=== CARD BACKPLATES END ===*/
 # ============================================================
 
 
@@ -207,42 +322,106 @@ static func action_button_rect(content: Rect2) -> Rect2:
 
 static func apply_layout(controls: Dictionary, content: Rect2) -> void:
 	var panel: Control = _control_or_null(controls, "market_panel")
+
 	if panel != null:
+		var safe_panel_size: Vector2 = panel_size(content.size)
+
 		panel.position = panel_position(content.position)
-		panel.custom_minimum_size = panel_size(content.size)
-		panel.add_theme_constant_override("separation", int(UIConstants.INNER_GAP))
+		panel.custom_minimum_size = safe_panel_size
+		panel.size = safe_panel_size
+		panel.size_flags_horizontal = Control.SIZE_FILL
+		panel.size_flags_vertical = Control.SIZE_FILL
+		panel.add_theme_constant_override("separation", 4)
 
-	_set_minimum_size(controls, "market_title", title_minimum_size(content))
-	_set_minimum_size(controls, "weekly_label", weekly_contract_minimum_size(content))
-	_set_minimum_size(controls, "order_detail_label", current_request_minimum_size(content))
-	_set_minimum_size(controls, "accept_button", action_button_minimum_size())
-	_set_minimum_size(controls, "fulfill_button", action_button_minimum_size())
-	_set_minimum_size(controls, "crate_button", action_button_minimum_size())
-	_set_minimum_size(controls, "order_scroll", request_list_minimum_size(content))
-	_set_minimum_size(controls, "inventory_label", support_label_minimum_size(content))
-	_set_minimum_size(controls, "relationship_label", support_label_minimum_size(content))
-	_set_minimum_size(controls, "logbook_label", logbook_minimum_size(content))
+	_set_minimum_size(
+		controls,
+		"market_title",
+		title_minimum_size(content)
+	)
 
-	var order_buttons: Array = Array(controls.get("order_buttons", []))
-	for item in order_buttons:
-		if item is Control:
-			(item as Control).custom_minimum_size = request_card_minimum_size(content)
+	_set_minimum_size(
+		controls,
+		"weekly_label",
+		weekly_contract_minimum_size(content)
+	)
+
+	_set_minimum_size(
+		controls,
+		"order_detail_label",
+		current_request_minimum_size(content)
+	)
+
+	_set_minimum_size(
+		controls,
+		"accept_button",
+		action_button_minimum_size()
+	)
+
+	_set_minimum_size(
+		controls,
+		"fulfill_button",
+		action_button_minimum_size()
+	)
+
+	_set_minimum_size(
+		controls,
+		"inventory_label",
+		support_label_minimum_size(content)
+	)
+
+	_set_minimum_size(
+		controls,
+		"relationship_label",
+		support_label_minimum_size(content)
+	)
+
+	_set_minimum_size(
+		controls,
+		"logbook_label",
+		logbook_minimum_size(content)
+	)
+
+	_set_minimum_size(
+		controls,
+		"order_page_button",
+		request_card_minimum_size(content)
+	)
+
+	var order_page_button: Control = _control_or_null(
+		controls,
+		"order_page_button"
+	)
+
+	if order_page_button != null:
+		order_page_button.size_flags_horizontal = Control.SIZE_FILL
 
 
-static func _set_minimum_size(controls: Dictionary, key: String, size: Vector2) -> void:
+static func _set_minimum_size(
+	controls: Dictionary,
+	key: String,
+	size: Vector2
+) -> void:
 	var control: Control = _control_or_null(controls, key)
+
 	if control != null:
 		control.custom_minimum_size = size
 
 
-static func _control_or_null(controls: Dictionary, key: String) -> Control:
+static func _control_or_null(
+	controls: Dictionary,
+	key: String
+) -> Control:
 	if not controls.has(key):
 		return null
+
 	var value: Variant = controls[key]
+
 	if value == null:
 		return null
+
 	if value is Control:
 		return value as Control
+
 	return null
 
 # ============================================================
@@ -273,44 +452,66 @@ static func current_request_text(
 	order_offers: Array[Dictionary],
 	varieties: Array[Dictionary]
 ) -> String:
-	var selected: Dictionary = OrderSystem.order_at(selected_index, accepted_orders, order_offers)
+	var selected: Dictionary = OrderSystem.order_at(
+		selected_index,
+		accepted_orders,
+		order_offers
+	)
+
 	if selected.is_empty():
-		return "📋 No request selected
+		return (
+			"No request selected\n\n"
+			+ "Available requests will show here when villagers post them."
+		)
 
-Available requests will show here when villagers post them."
+	var accepted: bool = OrderSystem.selected_order_is_accepted(
+		selected_index,
+		accepted_orders
+	)
 
-	var accepted: bool = OrderSystem.selected_order_is_accepted(selected_index, accepted_orders)
-	var status: String = "✅ ACTIVE REQUEST" if accepted else "🆕 NEW OFFER"
-	var customer: String = OrderSystem.short_customer_name(String(selected.get("customer", "Customer")))
+	var status: String = "ACCEPTED" if accepted else "NEW OFFER"
+	var customer: String = OrderSystem.short_customer_name(
+		String(selected.get("customer", "Customer"))
+	)
+
 	var quantity: int = int(selected.get("need", 0))
-	var variety_name: String = _display_variety_short(int(selected.get("variety", -1)), varieties)
+	var variety_name: String = _display_variety_short(
+		int(selected.get("variety", -1)),
+		varieties
+	)
+
 	var label: String = String(selected.get("label", "Fresh figs"))
 	var reward: int = int(selected.get("reward", 0))
 	var patience: int = int(selected.get("patience", 0))
-	var action_line: String = "Ready when packed." if accepted else "Accept when your pantry can handle it."
 
-	return "%s
-%s
+	var action_line: String = (
+		"Fulfill from pantry when packed."
+		if accepted
+		else
+		"Review only. No Trust risk until accepted."
+	)
 
-%sx %s figs
-%s
-
-💰 $%s      ⏳ %s left
-%s" % [
+	return (
+		"%s                         %s left\n"
+		+ "👤 %s\n"
+		+ "%sx %s figs\n"
+		+ "%s\n"
+		+ "PAYOUT  $%s\n"
+		+ "%s"
+	) % [
 		status,
+		OrderSystem.day_count_text(patience),
 		customer,
 		quantity,
 		variety_name,
 		label,
 		reward,
-		OrderSystem.day_count_text(patience),
 		action_line
 	]
 
 # ============================================================
 # /*=== CURRENT REQUEST HERO TEXT END ===*/
 # ============================================================
-
 
 # ============================================================
 # /*=== AVAILABLE REQUEST CARD TEXT START ===*/
@@ -322,26 +523,46 @@ static func request_card_text(
 	order_offers: Array[Dictionary],
 	varieties: Array[Dictionary]
 ) -> String:
-	var selected: Dictionary = OrderSystem.order_at(index, accepted_orders, order_offers)
+	var selected: Dictionary = OrderSystem.order_at(
+		index,
+		accepted_orders,
+		order_offers
+	)
+
 	if selected.is_empty():
 		return ""
 
-	var accepted: bool = OrderSystem.selected_order_is_accepted(index, accepted_orders)
-	var status_icon: String = "✅" if accepted else "🆕"
-	var customer: String = OrderSystem.short_customer_name(String(selected.get("customer", "Customer")))
+	var accepted: bool = OrderSystem.selected_order_is_accepted(
+		index,
+		accepted_orders
+	)
+
+	var status_text: String = "ACCEPTED" if accepted else "NEW"
+	var customer: String = OrderSystem.short_customer_name(
+		String(selected.get("customer", "Customer"))
+	)
 	var quantity: int = int(selected.get("need", 0))
-	var variety_name: String = _display_variety_short(int(selected.get("variety", -1)), varieties)
+	var variety_name: String = _display_variety_short(
+		int(selected.get("variety", -1)),
+		varieties
+	)
 	var reward: int = int(selected.get("reward", 0))
 	var patience: int = int(selected.get("patience", 0))
-	var time_text: String = OrderSystem.day_count_text(patience) if accepted else "review"
+	var time_text: String = (
+		OrderSystem.day_count_text(patience)
+		if accepted
+		else "Review"
+	)
 
-	return "%s %s
-%sx %s figs   ?   $%s   ?   %s" % [
-		status_icon,
+	return (
+		"%s  👤 %s  •  $%s\n"
+		+ "%s× %s figs  •  %s"
+	) % [
+		status_text,
 		customer,
+		reward,
 		quantity,
 		variety_name,
-		reward,
 		time_text
 	]
 

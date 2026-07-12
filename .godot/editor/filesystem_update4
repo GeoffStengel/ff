@@ -1,9 +1,2 @@
-res://scripts/render/farm_renderer.gd
-res://scripts/layout_system.gd
+res://scripts/ui/village_requests_ui.gd
 res://scripts/main.gd
-res://scripts/ui/drawer_ui.gd
-res://scripts/text_library.gd
-res://scripts/game_data.gd
-res://scripts/inventory_system.gd
-res://scripts/order_system.gd
-res://scripts/systems/weather_system.gd

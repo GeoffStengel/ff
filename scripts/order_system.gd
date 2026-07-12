@@ -101,12 +101,11 @@ static func order_text(
 
 
 # ============================================================
-# ORDER LIST CARD TEXT
+# /*=== ORDER PAGER CARD TEXT START ===*/
 # ------------------------------------------------------------
-# This is the compact card/button shown in the scrollable list.
-#
-# Goal:
-# Cleaner than the old "Offer ? Mara ? 5 figs ? $30" style.
+# Compact two-line text for the single Available Request card.
+# The pager already handles browsing, so instructional filler
+# like "Tap to review" is unnecessary.
 # ============================================================
 
 static func order_button_text(
@@ -115,30 +114,55 @@ static func order_button_text(
 	order_offers: Array[Dictionary],
 	varieties: Array[Dictionary]
 ) -> String:
-	var selected: Dictionary = order_at(index, accepted_orders, order_offers)
+	var selected: Dictionary = order_at(
+		index,
+		accepted_orders,
+		order_offers
+	)
 
 	if selected.is_empty():
 		return ""
 
-	var accepted: bool = selected_order_is_accepted(index, accepted_orders)
-	var status_icon: String = "✅" if accepted else "🆕"
-	var status_text: String = "Accepted" if accepted else "Offer"
-	var customer: String = short_customer_name(String(selected.get("customer", "Customer")))
-	var quantity: int = int(selected.get("need", 0))
-	var variety_name: String = variety_short_name(int(selected.get("variety", -1)), varieties)
-	var reward: int = int(selected.get("reward", 0))
-	var timer_text: String = day_count_text(int(selected.get("patience", 0))) + " left" if accepted else "Tap to review"
+	var accepted: bool = selected_order_is_accepted(
+		index,
+		accepted_orders
+	)
 
-	return "%s %s  |  %s\n%sx %s figs  •  $%s  •  %s" % [
+	var status_icon: String = "✅" if accepted else "🆕"
+	var status_text: String = "ACCEPTED" if accepted else "NEW"
+
+	var customer: String = short_customer_name(
+		String(selected.get("customer", "Customer"))
+	)
+
+	var quantity: int = int(selected.get("need", 0))
+	var variety_name: String = variety_short_name(
+		int(selected.get("variety", -1)),
+		varieties
+	)
+
+	var reward: int = int(selected.get("reward", 0))
+	var patience: int = int(selected.get("patience", 0))
+
+	var footer_text: String = (
+		day_count_text(patience) + " left"
+		if accepted
+		else "Review"
+	)
+
+	return "%s %s  👤 %s  •  $%s\n%s× %s figs  •  %s" % [
 		status_icon,
 		status_text,
 		customer,
+		reward,
 		quantity,
 		variety_name,
-		reward,
-		timer_text
+		footer_text
 	]
 
+# ============================================================
+# /*=== ORDER PAGER CARD TEXT END ===*/
+# ============================================================
 
 # ============================================================
 # ORDER LOOKUP HELPERS
