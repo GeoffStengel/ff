@@ -160,7 +160,12 @@ var tool_section_label: Label
 var menu_section_label: Label
 var controls_panel: VBoxContainer
 var market_panel: VBoxContainer
+var pantry_scroll: ScrollContainer
 var pantry_panel: VBoxContainer
+var pantry_harvest_grid: GridContainer
+var pantry_preserve_stats_row: HBoxContainer
+var pantry_preserve_actions: HBoxContainer
+var pantry_planting_grid: GridContainer
 var guide_panel: VBoxContainer
 var help_panel: VBoxContainer
 var market_title: Label
@@ -805,7 +810,7 @@ func _drawer_layout() -> Dictionary:
 # ============================================================
 
 func _drawer_panels() -> Array:
-	return [controls_panel, market_panel, pantry_panel, guide_panel, help_panel]
+	return [controls_panel, market_panel, pantry_scroll, guide_panel, help_panel]
 
 
 
@@ -862,6 +867,12 @@ func _farm_controls_ui_controls() -> Dictionary:
 func _pantry_ui_controls() -> Dictionary:
 	return {
 		"panel": pantry_panel,
+		"scroll": pantry_scroll,
+		"harvest_grid": pantry_harvest_grid,
+		"preserve_stats_row": pantry_preserve_stats_row,
+		"preserve_actions": pantry_preserve_actions,
+		"planting_grid": pantry_planting_grid,
+		"preserve_label": preserve_label,
 		"make_jam_button": make_jam_button,
 		"buy_jars_button": buy_jars_button,
 		"recipe_button": recipe_button,
@@ -1592,15 +1603,24 @@ func _build_ui() -> void:
 	# Delivery and selling remain in Village Requests.
 	# ============================================================
 
+	pantry_scroll = ScrollContainer.new()
+	pantry_scroll.name = "FarmPantryScroll"
+	pantry_scroll.position = drawer_content_rect.position
+	pantry_scroll.custom_minimum_size = drawer_content_rect.size
+	pantry_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	pantry_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	pantry_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ui.add_child(pantry_scroll)
+
 	pantry_panel = VBoxContainer.new()
 	pantry_panel.name = "FarmPantryPanel"
-	pantry_panel.position = drawer_content_rect.position
 	pantry_panel.custom_minimum_size = drawer_content_rect.size
+	pantry_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pantry_panel.add_theme_constant_override(
 		"separation",
 		PantryUI.panel_separation()
 	)
-	ui.add_child(pantry_panel)
+	pantry_scroll.add_child(pantry_panel)
 
 	# ============================================================
 	# /*=== PANTRY TITLE START ===*/
@@ -1608,7 +1628,7 @@ func _build_ui() -> void:
 
 	var pantry_title: Label = Label.new()
 	pantry_title.name = "PantryTitle"
-	pantry_title.text = "Farm Pantry"
+	pantry_title.text = "Farm Pantry 🫙"
 	pantry_title.custom_minimum_size = PantryUI.title_minimum_size()
 	_style_label(pantry_title, 25, Color("#3b2b19"))
 	pantry_panel.add_child(pantry_title)
@@ -1624,22 +1644,49 @@ func _build_ui() -> void:
 	# emoji, with a full variety name and right-aligned quantity.
 	# ============================================================
 
-	_add_section_label(pantry_panel, "HARVEST")
+	var harvest_section: PanelContainer = PanelContainer.new()
+	harvest_section.name = "PantryHarvestSection"
+	harvest_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	harvest_section.add_theme_stylebox_override(
+		"panel",
+		PantryUI.section_style_box()
+	)
+	pantry_panel.add_child(harvest_section)
 
-	var harvest_grid: GridContainer = GridContainer.new()
-	harvest_grid.name = "PantryHarvestGrid"
-	harvest_grid.columns = 2
-	harvest_grid.custom_minimum_size = PantryUI.harvest_grid_minimum_size()
-	harvest_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	harvest_grid.add_theme_constant_override(
+	var harvest_margin: MarginContainer = MarginContainer.new()
+	harvest_margin.name = "PantryHarvestSectionPadding"
+	harvest_margin.add_theme_constant_override("margin_left", PantryUI.section_margin())
+	harvest_margin.add_theme_constant_override("margin_top", PantryUI.section_margin())
+	harvest_margin.add_theme_constant_override("margin_right", PantryUI.section_margin())
+	harvest_margin.add_theme_constant_override("margin_bottom", PantryUI.section_margin())
+	harvest_section.add_child(harvest_margin)
+
+	var harvest_stack: VBoxContainer = VBoxContainer.new()
+	harvest_stack.name = "PantryHarvestSectionStack"
+	harvest_stack.add_theme_constant_override("separation", PantryUI.stat_card_gap())
+	harvest_margin.add_child(harvest_stack)
+
+	var harvest_header: Label = Label.new()
+	harvest_header.name = "PantryHarvestSectionHeader"
+	harvest_header.text = "HARVEST"
+	harvest_header.custom_minimum_size = PantryUI.section_header_minimum_size()
+	_style_label(harvest_header, 12, Color("#725431"))
+	harvest_stack.add_child(harvest_header)
+
+	pantry_harvest_grid = GridContainer.new()
+	pantry_harvest_grid.name = "PantryHarvestGrid"
+	pantry_harvest_grid.columns = 2
+	pantry_harvest_grid.custom_minimum_size = PantryUI.harvest_grid_minimum_size()
+	pantry_harvest_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pantry_harvest_grid.add_theme_constant_override(
 		"h_separation",
 		PantryUI.stat_card_gap()
 	)
-	harvest_grid.add_theme_constant_override(
+	pantry_harvest_grid.add_theme_constant_override(
 		"v_separation",
 		PantryUI.stat_card_gap()
 	)
-	pantry_panel.add_child(harvest_grid)
+	harvest_stack.add_child(pantry_harvest_grid)
 
 	pantry_harvest_amount_labels.clear()
 
@@ -1648,15 +1695,8 @@ func _build_ui() -> void:
 		harvest_card.name = "PantryHarvestCard_%s" % variety_index
 		harvest_card.custom_minimum_size = PantryUI.stat_card_minimum_size()
 		harvest_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		harvest_card.add_theme_stylebox_override(
-			"panel",
-			_rounded_box(
-				Color("#fffaf0"),
-				Color("#ead6aa"),
-				8
-			)
-		)
-		harvest_grid.add_child(harvest_card)
+		harvest_card.add_theme_stylebox_override("panel", PantryUI.item_card_style_box())
+		pantry_harvest_grid.add_child(harvest_card)
 
 		var harvest_row: HBoxContainer = HBoxContainer.new()
 		harvest_row.name = "PantryHarvestRow_%s" % variety_index
@@ -1687,6 +1727,7 @@ func _build_ui() -> void:
 		harvest_amount.text = "0"
 		harvest_amount.custom_minimum_size = PantryUI.quantity_minimum_size()
 		harvest_amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		harvest_amount.add_theme_stylebox_override("normal", PantryUI.quantity_style_box())
 		_style_label(harvest_amount, 13, Color("#3d2e1c"))
 		harvest_row.add_child(harvest_amount)
 
@@ -1702,7 +1743,7 @@ func _build_ui() -> void:
 	harvest_total_margin.name = "PantryHarvestTotalRow"
 	harvest_total_margin.custom_minimum_size = PantryUI.total_row_minimum_size()
 	harvest_total_margin.add_theme_constant_override("margin_right", 8)
-	pantry_panel.add_child(harvest_total_margin)
+	harvest_stack.add_child(harvest_total_margin)
 
 	pantry_total_figs_label = Label.new()
 	pantry_total_figs_label.name = "PantryHarvestTotalAmount"
@@ -1723,17 +1764,41 @@ func _build_ui() -> void:
 	# /*=== PANTRY PRESERVES START ===*/
 	# ============================================================
 
-	_add_section_label(pantry_panel, "PRESERVES")
+	var preserve_section: PanelContainer = PanelContainer.new()
+	preserve_section.name = "PantryPreserveSection"
+	preserve_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	preserve_section.add_theme_stylebox_override("panel", PantryUI.section_style_box())
+	pantry_panel.add_child(preserve_section)
 
-	var preserve_stats_row: HBoxContainer = HBoxContainer.new()
-	preserve_stats_row.name = "PantryPreserveStatsRow"
-	preserve_stats_row.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	preserve_stats_row.custom_minimum_size = PantryUI.preserve_stats_row_minimum_size()
-	preserve_stats_row.add_theme_constant_override(
+	var preserve_margin: MarginContainer = MarginContainer.new()
+	preserve_margin.name = "PantryPreserveSectionPadding"
+	preserve_margin.add_theme_constant_override("margin_left", PantryUI.section_margin())
+	preserve_margin.add_theme_constant_override("margin_top", PantryUI.section_margin())
+	preserve_margin.add_theme_constant_override("margin_right", PantryUI.section_margin())
+	preserve_margin.add_theme_constant_override("margin_bottom", PantryUI.section_margin())
+	preserve_section.add_child(preserve_margin)
+
+	var preserve_stack: VBoxContainer = VBoxContainer.new()
+	preserve_stack.name = "PantryPreserveSectionStack"
+	preserve_stack.add_theme_constant_override("separation", PantryUI.stat_card_gap())
+	preserve_margin.add_child(preserve_stack)
+
+	var preserve_header: Label = Label.new()
+	preserve_header.name = "PantryPreserveSectionHeader"
+	preserve_header.text = "PRESERVES"
+	preserve_header.custom_minimum_size = PantryUI.section_header_minimum_size()
+	_style_label(preserve_header, 12, Color("#725431"))
+	preserve_stack.add_child(preserve_header)
+
+	pantry_preserve_stats_row = HBoxContainer.new()
+	pantry_preserve_stats_row.name = "PantryPreserveStatsRow"
+	pantry_preserve_stats_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pantry_preserve_stats_row.custom_minimum_size = PantryUI.preserve_stats_row_minimum_size()
+	pantry_preserve_stats_row.add_theme_constant_override(
 		"separation",
 		PantryUI.stat_card_gap()
 	)
-	pantry_panel.add_child(preserve_stats_row)
+	preserve_stack.add_child(pantry_preserve_stats_row)
 
 	# ============================================================
 	# /*=== PANTRY JARS STAT START ===*/
@@ -1742,15 +1807,8 @@ func _build_ui() -> void:
 	var jars_card: PanelContainer = PanelContainer.new()
 	jars_card.name = "PantryJarsCard"
 	jars_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	jars_card.add_theme_stylebox_override(
-		"panel",
-		_rounded_box(
-			Color("#fffaf0"),
-			Color("#ead6aa"),
-			8
-		)
-	)
-	preserve_stats_row.add_child(jars_card)
+	jars_card.add_theme_stylebox_override("panel", PantryUI.item_card_style_box())
+	pantry_preserve_stats_row.add_child(jars_card)
 
 	var jars_row: HBoxContainer = HBoxContainer.new()
 	jars_row.name = "PantryJarsRow"
@@ -1768,6 +1826,7 @@ func _build_ui() -> void:
 	pantry_jars_count_label.name = "PantryJarsAmount"
 	pantry_jars_count_label.custom_minimum_size = PantryUI.quantity_minimum_size()
 	pantry_jars_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pantry_jars_count_label.add_theme_stylebox_override("normal", PantryUI.quantity_style_box())
 	_style_label(pantry_jars_count_label, 14, Color("#3d2e1c"))
 	jars_row.add_child(pantry_jars_count_label)
 
@@ -1782,15 +1841,8 @@ func _build_ui() -> void:
 	var jam_card: PanelContainer = PanelContainer.new()
 	jam_card.name = "PantryJamCard"
 	jam_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	jam_card.add_theme_stylebox_override(
-		"panel",
-		_rounded_box(
-			Color("#fffaf0"),
-			Color("#ead6aa"),
-			8
-		)
-	)
-	preserve_stats_row.add_child(jam_card)
+	jam_card.add_theme_stylebox_override("panel", PantryUI.item_card_style_box())
+	pantry_preserve_stats_row.add_child(jam_card)
 
 	var jam_row: HBoxContainer = HBoxContainer.new()
 	jam_row.name = "PantryJamRow"
@@ -1816,6 +1868,7 @@ func _build_ui() -> void:
 	pantry_jam_count_label.name = "PantryJamAmount"
 	pantry_jam_count_label.custom_minimum_size = PantryUI.quantity_minimum_size()
 	pantry_jam_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pantry_jam_count_label.add_theme_stylebox_override("normal", PantryUI.quantity_style_box())
 	_style_label(pantry_jam_count_label, 14, Color("#3d2e1c"))
 	jam_row.add_child(pantry_jam_count_label)
 
@@ -1828,16 +1881,16 @@ func _build_ui() -> void:
 	preserve_label.text = PantryUI.preserve_recipe_text()
 	preserve_label.custom_minimum_size = PantryUI.preserve_recipe_minimum_size()
 	_style_label(preserve_label, 11, Color("#5b492e"))
-	pantry_panel.add_child(preserve_label)
+	preserve_stack.add_child(preserve_label)
 
-	var preserve_actions: HBoxContainer = HBoxContainer.new()
-	preserve_actions.name = "PantryPreserveActions"
-	preserve_actions.custom_minimum_size = PantryUI.action_row_minimum_size()
-	preserve_actions.add_theme_constant_override(
+	pantry_preserve_actions = HBoxContainer.new()
+	pantry_preserve_actions.name = "PantryPreserveActions"
+	pantry_preserve_actions.custom_minimum_size = PantryUI.action_row_minimum_size()
+	pantry_preserve_actions.add_theme_constant_override(
 		"separation",
 		PantryUI.action_gap()
 	)
-	pantry_panel.add_child(preserve_actions)
+	preserve_stack.add_child(pantry_preserve_actions)
 
 	make_jam_button = Button.new()
 	make_jam_button.name = "PantryMakeJamButton"
@@ -1850,7 +1903,7 @@ func _build_ui() -> void:
 		_texture_from(item_textures, "jam")
 	)
 	make_jam_button.pressed.connect(func() -> void: call("_make_jam"))
-	preserve_actions.add_child(make_jam_button)
+	pantry_preserve_actions.add_child(make_jam_button)
 
 	buy_jars_button = Button.new()
 	buy_jars_button.name = "PantryBuyJarsButton"
@@ -1859,16 +1912,16 @@ func _build_ui() -> void:
 	buy_jars_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_button(buy_jars_button, 12, "secondary")
 	buy_jars_button.pressed.connect(func() -> void: call("_buy_mason_jars"))
-	preserve_actions.add_child(buy_jars_button)
+	pantry_preserve_actions.add_child(buy_jars_button)
 
 	recipe_button = Button.new()
 	recipe_button.name = "PantryRecipesButton"
 	recipe_button.text = "📖  Jam Recipes"
 	recipe_button.custom_minimum_size = PantryUI.recipe_button_minimum_size()
-	recipe_button.size_flags_horizontal = Control.SIZE_FILL
-	_style_button(recipe_button, 12, "secondary")
+	recipe_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_button(recipe_button, 12, "tertiary")
 	recipe_button.pressed.connect(func() -> void: call("_show_recipe"))
-	pantry_panel.add_child(recipe_button)
+	preserve_stack.add_child(recipe_button)
 
 	# ============================================================
 	# /*=== PANTRY PRESERVES END ===*/
@@ -1881,22 +1934,49 @@ func _build_ui() -> void:
 	# cutting texture and softer styling.
 	# ============================================================
 
-	_add_section_label(pantry_panel, "PLANTING STOCK")
+	var planting_section: PanelContainer = PanelContainer.new()
+	planting_section.name = "PantryPlantingStockSection"
+	planting_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	planting_section.add_theme_stylebox_override(
+		"panel",
+		PantryUI.section_style_box()
+	)
+	pantry_panel.add_child(planting_section)
 
-	var planting_grid: GridContainer = GridContainer.new()
-	planting_grid.name = "PantryPlantingStockGrid"
-	planting_grid.columns = 2
-	planting_grid.custom_minimum_size = PantryUI.planting_grid_minimum_size()
-	planting_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	planting_grid.add_theme_constant_override(
+	var planting_margin: MarginContainer = MarginContainer.new()
+	planting_margin.name = "PantryPlantingStockSectionPadding"
+	planting_margin.add_theme_constant_override("margin_left", PantryUI.section_margin())
+	planting_margin.add_theme_constant_override("margin_top", PantryUI.section_margin())
+	planting_margin.add_theme_constant_override("margin_right", PantryUI.section_margin())
+	planting_margin.add_theme_constant_override("margin_bottom", PantryUI.section_margin())
+	planting_section.add_child(planting_margin)
+
+	var planting_stack: VBoxContainer = VBoxContainer.new()
+	planting_stack.name = "PantryPlantingStockSectionStack"
+	planting_stack.add_theme_constant_override("separation", PantryUI.stat_card_gap())
+	planting_margin.add_child(planting_stack)
+
+	var planting_header: Label = Label.new()
+	planting_header.name = "PantryPlantingStockSectionHeader"
+	planting_header.text = "PLANTING STOCK"
+	planting_header.custom_minimum_size = PantryUI.section_header_minimum_size()
+	_style_label(planting_header, 12, Color("#725431"))
+	planting_stack.add_child(planting_header)
+
+	pantry_planting_grid = GridContainer.new()
+	pantry_planting_grid.name = "PantryPlantingStockGrid"
+	pantry_planting_grid.columns = 2
+	pantry_planting_grid.custom_minimum_size = PantryUI.planting_grid_minimum_size()
+	pantry_planting_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pantry_planting_grid.add_theme_constant_override(
 		"h_separation",
 		PantryUI.stat_card_gap()
 	)
-	planting_grid.add_theme_constant_override(
+	pantry_planting_grid.add_theme_constant_override(
 		"v_separation",
 		PantryUI.stat_card_gap()
 	)
-	pantry_panel.add_child(planting_grid)
+	planting_stack.add_child(pantry_planting_grid)
 
 	pantry_cutting_amount_labels.clear()
 
@@ -1905,15 +1985,8 @@ func _build_ui() -> void:
 		cutting_card.name = "PantryCuttingCard_%s" % variety_index
 		cutting_card.custom_minimum_size = PantryUI.stat_card_minimum_size()
 		cutting_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cutting_card.add_theme_stylebox_override(
-			"panel",
-			_rounded_box(
-				Color("#fffaf0"),
-				Color("#eadfc6"),
-				8
-			)
-		)
-		planting_grid.add_child(cutting_card)
+		cutting_card.add_theme_stylebox_override("panel", PantryUI.item_card_style_box())
+		pantry_planting_grid.add_child(cutting_card)
 
 		var cutting_row: HBoxContainer = HBoxContainer.new()
 		cutting_row.name = "PantryCuttingRow_%s" % variety_index
@@ -1944,6 +2017,7 @@ func _build_ui() -> void:
 		cutting_amount.text = "0"
 		cutting_amount.custom_minimum_size = PantryUI.quantity_minimum_size()
 		cutting_amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cutting_amount.add_theme_stylebox_override("normal", PantryUI.quantity_style_box())
 		_style_label(cutting_amount, 12, Color("#4f402d"))
 		cutting_row.add_child(cutting_amount)
 
@@ -1957,7 +2031,7 @@ func _build_ui() -> void:
 	cuttings_total_margin.name = "PantryCuttingsTotalRow"
 	cuttings_total_margin.custom_minimum_size = PantryUI.total_row_minimum_size()
 	cuttings_total_margin.add_theme_constant_override("margin_right", 8)
-	pantry_panel.add_child(cuttings_total_margin)
+	planting_stack.add_child(cuttings_total_margin)
 
 	pantry_total_cuttings_label = Label.new()
 	pantry_total_cuttings_label.name = "PantryCuttingsTotalAmount"
@@ -1976,7 +2050,7 @@ func _build_ui() -> void:
 	pantry_trees_label.clip_text = true
 	pantry_trees_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_style_label(pantry_trees_label, 11, Color("#5b492e"))
-	pantry_panel.add_child(pantry_trees_label)
+	planting_stack.add_child(pantry_trees_label)
 
 	# ============================================================
 	# /*=== PANTRY PLANTING STOCK GRID END ===*/
@@ -1986,7 +2060,34 @@ func _build_ui() -> void:
 	# /*=== PANTRY ABOUT JAM START ===*/
 	# ============================================================
 
-	_add_section_label(pantry_panel, "ABOUT JAM")
+	var about_section: PanelContainer = PanelContainer.new()
+	about_section.name = "PantryAboutJamSection"
+	about_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	about_section.add_theme_stylebox_override(
+		"panel",
+		PantryUI.quiet_section_style_box()
+	)
+	pantry_panel.add_child(about_section)
+
+	var about_margin: MarginContainer = MarginContainer.new()
+	about_margin.name = "PantryAboutJamSectionPadding"
+	about_margin.add_theme_constant_override("margin_left", PantryUI.section_margin())
+	about_margin.add_theme_constant_override("margin_top", PantryUI.section_margin())
+	about_margin.add_theme_constant_override("margin_right", PantryUI.section_margin())
+	about_margin.add_theme_constant_override("margin_bottom", PantryUI.section_margin())
+	about_section.add_child(about_margin)
+
+	var about_stack: VBoxContainer = VBoxContainer.new()
+	about_stack.name = "PantryAboutJamSectionStack"
+	about_stack.add_theme_constant_override("separation", PantryUI.stat_card_gap())
+	about_margin.add_child(about_stack)
+
+	var about_header: Label = Label.new()
+	about_header.name = "PantryAboutJamSectionHeader"
+	about_header.text = "ABOUT JAM"
+	about_header.custom_minimum_size = PantryUI.section_header_minimum_size()
+	_style_label(about_header, 12, Color("#725431"))
+	about_stack.add_child(about_header)
 
 	pantry_hint_label = Label.new()
 	pantry_hint_label.name = "PantryAboutJamText"
@@ -1994,7 +2095,7 @@ func _build_ui() -> void:
 	pantry_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	pantry_hint_label.text = PantryUI.about_jam_text()
 	_style_label(pantry_hint_label, 11, Color("#5b492e"))
-	pantry_panel.add_child(pantry_hint_label)
+	about_stack.add_child(pantry_hint_label)
 
 	# ============================================================
 	# /*=== PANTRY ABOUT JAM END ===*/
@@ -2565,6 +2666,12 @@ func _style_button(button: Button, size: int, role: String = "neutral") -> void:
 		hover = Color("#fff4df")
 		pressed = Color("#dfc996")
 		border = Color("#c5a66f")
+	elif role == "tertiary":
+		fill = Color("#fff8e8")
+		hover = Color("#fff4df")
+		pressed = Color("#ead6aa")
+		border = Color("#d9c49c")
+		font_color = Color("#5b492e")
 	button.add_theme_stylebox_override("normal", _button_style(fill, border))
 	button.add_theme_stylebox_override("hover", _button_style(hover, border))
 	button.add_theme_stylebox_override("pressed", _button_style(pressed, border))

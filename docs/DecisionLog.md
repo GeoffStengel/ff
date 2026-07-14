@@ -140,3 +140,17 @@ Benefits:
 - Save keys and current balancing stay unchanged
 - InventorySystem still mutates inventory while EconomySystem owns money math
 - OrderSystem still owns order state while RelationshipSystem owns relationship math
+
+## Pantry Mobile-First Prototype
+
+Reason:
+The Pantry screen had become a useful test case for the new cozy journal direction, but its rows, grids, and width constants were still visually cramped and uneven.
+
+Decision:
+Pantry now uses shared design tokens, reusable soft card styles, a scrollable drawer page shell, section cards, scannable quantity badges, and responsive one/two-column grids. main.gd still creates the controls, preserves all callbacks, and owns gameplay state.
+
+Benefits:
+- Pantry can grow vertically without clipping the drawer
+- Shared readable-width and spacing tokens replace Pantry-only magic numbers
+- Make Jam is the single obvious primary action
+- Pantry becomes the prototype pattern for migrating other screens later

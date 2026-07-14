@@ -218,3 +218,24 @@ Establish a long-term visual direction for the entire game before beginning a la
 - Establish a reusable card and button system.
 - Design a shared visual language for all feature screens.
 - Prototype a redesigned Pantry using the updated style guide before applying the design system across the rest of the game.
+
+
+## 2026-07-14 Pantry Redesign Prototype
+
+### Goal
+
+Complete one bounded mobile-first Pantry redesign phase without changing gameplay behavior.
+
+### Completed
+
+- Added shared readable-width, breakpoint, spacing, radius, button-height, typography, and button-intent tokens.
+- Added reusable journal card, section card, quiet card, and quantity badge style helpers.
+- Redesigned Pantry as a vertically focused scrollable page with Harvest, Preserves, Planting Stock, and About Jam sections.
+- Kept `FarmPantryPanel` as the Pantry VBox and added `FarmPantryScroll` as the drawer scroll shell.
+- Preserved Pantry callbacks, inventory labels, crafting buttons, and save/gameplay behavior.
+- Confirmed no bundled licensed font files were present, so typography roles still use the current font/fallback.
+
+### Next
+
+- Manually test Pantry in Godot at desktop and narrow widths.
+- If the prototype feels good, migrate Guide next because it has mostly static educational content and lower gameplay risk.

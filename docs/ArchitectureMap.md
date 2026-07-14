@@ -41,7 +41,7 @@
 - `scripts/ui/farm_controls_ui.gd`
   - Farm tab layout, sizing, spacing, and card geometry.
 - `scripts/ui/pantry_ui.gd`
-  - Pantry tab layout, sizing, spacing, card geometry, and pantry display copy.
+  - Pantry tab layout, sizing, scroll-shell geometry, responsive grid sizing, section/card styling wrappers, and pantry display copy.
 - `scripts/ui/guide_ui.gd`
   - Guide tab layout, sizing, spacing, card geometry, and guide display copy.
 - `scripts/ui/help_ui.gd`

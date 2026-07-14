@@ -84,3 +84,14 @@
 - Moved pricing, affordability, sale values, order payout math, and barrel water capacity math into EconomySystem.
 - Moved relationship score changes, customer bonuses, short names, summaries, and milestone reward deltas into RelationshipSystem.
 - Kept save keys, UI text, reward numbers, customer names, and current balance unchanged.
+
+## 2026-07-14
+
+### UI
+
+- Added mobile-first shared UI tokens for readable page width, narrow breakpoints, section/card spacing, radii, button heights, typography roles, and button intents.
+- Added reusable cozy journal card, section card, quiet card, and quantity badge styles.
+- Redesigned Pantry as a vertically focused prototype with section cards for Harvest, Preserves, Planting Stock, and About Jam.
+- Added a scrollable Pantry drawer shell while keeping `FarmPantryPanel` as the Pantry VBox.
+- Made Pantry item grids responsive so they can fall back from two columns to one column at narrow widths.
+- Kept Pantry gameplay behavior, callbacks, save keys, inventory values, crafting actions, and button references unchanged.

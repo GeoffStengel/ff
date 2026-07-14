@@ -137,3 +137,49 @@ Whenever practical:
 - Child Containers use `SIZE_EXPAND_FILL`.
 - `custom_minimum_size` defines minimum size, not fixed size.
 - Avoid hardcoded widths unless required by the design.
+
+
+## Shared Design Tokens
+
+The shared UI foundation now includes mobile-first design tokens for:
+
+- readable page width,
+- narrow content breakpoint,
+- compact page padding,
+- section and card gaps,
+- section padding,
+- standard button heights,
+- card and panel radii,
+- typography roles,
+- button intent names.
+
+Feature modules should use these tokens before creating feature-specific constants.
+
+
+## Reusable Components
+
+`UITheme` owns reusable soft journal styles:
+
+- page card style,
+- section card style,
+- quiet card style,
+- quantity badge style.
+
+Feature UI modules may expose feature-specific wrappers around those styles when that keeps one screen easy to understand.
+
+
+## Pantry Responsive Pattern
+
+Pantry is the current prototype for later screen migration.
+
+Its responsive chain is:
+
+Drawer content width
+-> Pantry scroll shell
+-> centered readable Pantry VBox
+-> section card
+-> grid/row
+-> item card
+-> expanding label plus fixed quantity badge
+
+At narrow widths, Pantry item grids fall back to one column while preserving callbacks and gameplay references in `main.gd`.

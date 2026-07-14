@@ -87,7 +87,7 @@ NPCs
 [ ] Shared Card Components
 [ ] Shared Button Styles
 [ ] Mobile-First Responsive Layout
-[ ] Pantry 3.0 Prototype
+[x] Pantry 3.0 Prototype
 [ ] Rollout to Remaining UI Screens
 
 ## Long-Term Goal

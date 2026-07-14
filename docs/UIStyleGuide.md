@@ -266,3 +266,22 @@ Whitespace should establish hierarchy before borders are added.
 Cards should group related information.
 
 Buttons should communicate importance through consistent styling rather than color alone.
+
+
+## Pantry Prototype
+
+The Pantry screen is the first mobile-first redesign prototype.
+
+Rules established there:
+
+- Use a vertically focused page stack.
+- Keep the page around the shared readable width.
+- Use soft section cards for Harvest, Preserves, Planting Stock, and quiet reference text.
+- Put the primary action first: Make Jam.
+- Treat Buy Jars as secondary.
+- Treat Jam Recipes as tertiary/reference.
+- Let text labels expand while quantity labels keep a controlled minimum width.
+- Let item grids use two columns when readable and fall back to one column at narrow widths.
+- Use a scrollable page shell when content is taller than the drawer.
+
+No bundled licensed font is currently present in the repository. Typography roles should use the current project font/fallback until a redistributable font is added through the shared theme.

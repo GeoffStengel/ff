@@ -24,10 +24,16 @@ const PANEL_FILL := Color(0.22, 0.15, 0.09, 0.92)
 const CARD_FILL := Color(0.34, 0.24, 0.14, 0.94)
 const CARD_FILL_SOFT := Color(0.42, 0.31, 0.18, 0.92)
 const BORDER := Color(0.78, 0.57, 0.31, 0.95)
+const JOURNAL_PAGE := Color("#fff8e8")
+const JOURNAL_CARD := Color("#fffaf0")
+const JOURNAL_CARD_SOFT := Color("#f8eed8")
+const JOURNAL_BORDER := Color("#ead6aa")
+const JOURNAL_BORDER_STRONG := Color("#c9a96a")
 
 const TEXT_MAIN := Color(0.98, 0.90, 0.72, 1.0)
 const TEXT_MUTED := Color(0.78, 0.66, 0.48, 1.0)
 const TEXT_DARK := Color(0.22, 0.15, 0.09, 1.0)
+const TEXT_HELPER := Color("#725431")
 
 const ACCENT_GREEN := Color(0.45, 0.74, 0.38, 1.0)
 const ACCENT_GOLD := Color(0.96, 0.72, 0.28, 1.0)
@@ -52,6 +58,70 @@ const BORDER_WIDTH := 2.0
 
 # ============================================================
 # /*=== SPACING END ===*/
+# ============================================================
+
+
+# ============================================================
+# /*=== STYLEBOX HELPERS START ===*/
+# ============================================================
+
+static func rounded_style(
+	fill: Color,
+	border: Color,
+	radius: int,
+	border_width: int = 1
+) -> StyleBoxFlat:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.border_width_left = border_width
+	style.border_width_right = border_width
+	style.border_width_top = border_width
+	style.border_width_bottom = border_width
+	style.corner_radius_top_left = radius
+	style.corner_radius_top_right = radius
+	style.corner_radius_bottom_left = radius
+	style.corner_radius_bottom_right = radius
+	return style
+
+
+static func page_card_style() -> StyleBoxFlat:
+	return rounded_style(
+		JOURNAL_PAGE,
+		Color(0.0, 0.0, 0.0, 0.0),
+		UIConstants.PANEL_RADIUS,
+		0
+	)
+
+
+static func section_card_style() -> StyleBoxFlat:
+	return rounded_style(
+		JOURNAL_CARD,
+		JOURNAL_BORDER,
+		UIConstants.CARD_RADIUS,
+		1
+	)
+
+
+static func quiet_card_style() -> StyleBoxFlat:
+	return rounded_style(
+		JOURNAL_CARD_SOFT,
+		Color("#f0dfbd"),
+		UIConstants.CARD_RADIUS,
+		1
+	)
+
+
+static func quantity_badge_style() -> StyleBoxFlat:
+	return rounded_style(
+		Color("#efe0c2"),
+		Color("#d0b984"),
+		8,
+		1
+	)
+
+# ============================================================
+# /*=== STYLEBOX HELPERS END ===*/
 # ============================================================
 
 
