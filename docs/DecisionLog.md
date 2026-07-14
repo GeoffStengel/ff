@@ -154,3 +154,20 @@ Benefits:
 - Shared readable-width and spacing tokens replace Pantry-only magic numbers
 - Make Jam is the single obvious primary action
 - Pantry becomes the prototype pattern for migrating other screens later
+
+## Fig Farmer OS v1 PageChrome
+
+Reason:
+The project needs one reusable mobile-first page shell before migrating more screens, so each future page does not invent its own header, scroll host, and navigation.
+
+Decision:
+Added PageChromeUI and BottomNavigationUI. Pantry is the first page hosted inside PageChrome. The legacy drawer and left-dock tabs remain during migration. Bottom navigation reuses the existing `_set_side_tab()` callback instead of creating a new router.
+
+Back behavior:
+No navigation history exists yet, so Back returns to the Farm/default drawer view. Close uses the existing panel-close behavior by setting the panel closed.
+
+Benefits:
+- One shared mobile-page composition
+- One intentional scroll owner for migrated pages
+- Existing callbacks and gameplay behavior stay intact
+- Future pages can migrate without rebuilding the chrome

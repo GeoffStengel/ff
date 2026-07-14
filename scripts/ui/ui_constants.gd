@@ -33,6 +33,15 @@ const PAGE_PADDING_COMPACT := 14.0
 const SECTION_PADDING := 12.0
 const SECTION_GAP_COMFORT := 12.0
 const CARD_GAP_COMFORT := 8.0
+const PAGE_CHROME_SAFE_PADDING := 14.0
+const PAGE_CHROME_HEADER_HEIGHT := 52.0
+const PAGE_CHROME_BOTTOM_NAV_HEIGHT := 72.0
+const PAGE_CHROME_CONTENT_GAP := 10.0
+const TOUCH_TARGET_MIN := 48.0
+const NAV_ITEM_MIN_WIDTH := 64.0
+const NAV_ICON_SIZE := 22.0
+const TITLE_ICON_SIZE := 24.0
+const SECTION_HEADER_ICON_SIZE := 20.0
 
 # ============================================================
 # /*=== RESPONSIVE DESIGN TOKENS END ===*/

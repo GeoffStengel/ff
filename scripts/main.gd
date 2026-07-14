@@ -50,6 +50,8 @@ const ToolPanelUI = preload("res://scripts/ui/tool_panel_ui.gd")
 const DrawerUI = preload("res://scripts/ui/drawer_ui.gd")
 const FarmControlsUI = preload("res://scripts/ui/farm_controls_ui.gd")
 const PantryUI = preload("res://scripts/ui/pantry_ui.gd")
+const PageChromeUI = preload("res://scripts/ui/page_chrome_ui.gd")
+const BottomNavigationUI = preload("res://scripts/ui/bottom_navigation_ui.gd")
 const GuideUI = preload("res://scripts/ui/guide_ui.gd")
 const HelpUI = preload("res://scripts/ui/help_ui.gd")
 const UIDebugOverlay = preload("res://scripts/ui/ui_debug_overlay.gd")
@@ -160,6 +162,8 @@ var tool_section_label: Label
 var menu_section_label: Label
 var controls_panel: VBoxContainer
 var market_panel: VBoxContainer
+var page_chrome_nodes: Dictionary = {}
+var bottom_nav_buttons: Dictionary = {}
 var pantry_scroll: ScrollContainer
 var pantry_panel: VBoxContainer
 var pantry_harvest_grid: GridContainer
@@ -806,11 +810,31 @@ func _drawer_layout() -> Dictionary:
 # ============================================================
 
 # ============================================================
+# /*=== FUNCTION PAGE CHROME LAYOUT START ===*/
+# ============================================================
+
+func _page_chrome_rect() -> Rect2:
+	return _drawer_layout().get("drawer", Rect2())
+
+
+func _page_chrome_content_rect() -> Rect2:
+	return PageChromeUI.content_rect_for_layout(_page_chrome_rect())
+
+
+func _is_page_chrome_open() -> bool:
+	return panel_open and side_tab == 2
+
+
+# ============================================================
+# /*=== FUNCTION PAGE CHROME LAYOUT END ===*/
+# ============================================================
+
+# ============================================================
 # /*=== FUNCTION DRAWER PANELS START ===*/
 # ============================================================
 
 func _drawer_panels() -> Array:
-	return [controls_panel, market_panel, pantry_scroll, guide_panel, help_panel]
+	return [controls_panel, market_panel, null, guide_panel, help_panel]
 
 
 
@@ -868,6 +892,7 @@ func _pantry_ui_controls() -> Dictionary:
 	return {
 		"panel": pantry_panel,
 		"scroll": pantry_scroll,
+		"container_mode": true,
 		"harvest_grid": pantry_harvest_grid,
 		"preserve_stats_row": pantry_preserve_stats_row,
 		"preserve_actions": pantry_preserve_actions,
@@ -929,8 +954,9 @@ func _apply_layout_to_controls() -> void:
 	BottomBarUI.apply_layout(_bottom_bar_controls(), _bottom_bar_layout())
 	ToolPanelUI.apply_layout(_tool_panel_controls(), _tool_panel_layout())
 	DrawerUI.apply_layout(_drawer_controls(), _drawer_layout())
+	PageChromeUI.apply_layout(page_chrome_nodes, _page_chrome_rect())
 	FarmControlsUI.apply_layout(_farm_controls_ui_controls(), _village_requests_content_rect())
-	PantryUI.apply_layout(_pantry_ui_controls(), _village_requests_content_rect())
+	PantryUI.apply_layout(_pantry_ui_controls(), _page_chrome_content_rect())
 	GuideUI.apply_layout(_guide_ui_controls(), _village_requests_content_rect())
 	HelpUI.apply_layout(_help_ui_controls(), _village_requests_content_rect())
 	VillageRequestsUI.apply_layout(_village_requests_controls(), _village_requests_content_rect())
@@ -1222,6 +1248,8 @@ func _build_ui() -> void:
 	_add_tab_button(tab_row, "Pantry", 2)
 	_add_tab_button(tab_row, "Guide", 3)
 	_add_tab_button(tab_row, "Help", 4)
+
+	_build_page_chrome(ui)
 
 	controls_panel = VBoxContainer.new()
 	controls_panel.name = "FarmControlsPanel"
@@ -1603,24 +1631,25 @@ func _build_ui() -> void:
 	# Delivery and selling remain in Village Requests.
 	# ============================================================
 
-	pantry_scroll = ScrollContainer.new()
-	pantry_scroll.name = "FarmPantryScroll"
-	pantry_scroll.position = drawer_content_rect.position
-	pantry_scroll.custom_minimum_size = drawer_content_rect.size
-	pantry_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	pantry_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	pantry_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ui.add_child(pantry_scroll)
+	pantry_scroll = page_chrome_nodes.get(
+		"content_scroll",
+		null
+	) as ScrollContainer
 
 	pantry_panel = VBoxContainer.new()
-	pantry_panel.name = "FarmPantryPanel"
+	pantry_panel.name = "PantryPageContent"
 	pantry_panel.custom_minimum_size = drawer_content_rect.size
 	pantry_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pantry_panel.add_theme_constant_override(
 		"separation",
 		PantryUI.panel_separation()
 	)
-	pantry_scroll.add_child(pantry_panel)
+	var page_content: VBoxContainer = page_chrome_nodes.get(
+		"content",
+		null
+	) as VBoxContainer
+	if page_content != null:
+		page_content.add_child(pantry_panel)
 
 	# ============================================================
 	# /*=== PANTRY TITLE START ===*/
@@ -1630,6 +1659,7 @@ func _build_ui() -> void:
 	pantry_title.name = "PantryTitle"
 	pantry_title.text = "Farm Pantry 🫙"
 	pantry_title.custom_minimum_size = PantryUI.title_minimum_size()
+	pantry_title.visible = false
 	_style_label(pantry_title, 25, Color("#3b2b19"))
 	pantry_panel.add_child(pantry_title)
 
@@ -1666,12 +1696,11 @@ func _build_ui() -> void:
 	harvest_stack.add_theme_constant_override("separation", PantryUI.stat_card_gap())
 	harvest_margin.add_child(harvest_stack)
 
-	var harvest_header: Label = Label.new()
-	harvest_header.name = "PantryHarvestSectionHeader"
-	harvest_header.text = "HARVEST"
-	harvest_header.custom_minimum_size = PantryUI.section_header_minimum_size()
-	_style_label(harvest_header, 12, Color("#725431"))
-	harvest_stack.add_child(harvest_header)
+	harvest_stack.add_child(PantryUI.create_section_header(
+		"PantryHarvestSection",
+		"Harvest",
+		_texture_from(item_textures, "fig")
+	))
 
 	pantry_harvest_grid = GridContainer.new()
 	pantry_harvest_grid.name = "PantryHarvestGrid"
@@ -1765,13 +1794,13 @@ func _build_ui() -> void:
 	# ============================================================
 
 	var preserve_section: PanelContainer = PanelContainer.new()
-	preserve_section.name = "PantryPreserveSection"
+	preserve_section.name = "PantryPreservesSection"
 	preserve_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	preserve_section.add_theme_stylebox_override("panel", PantryUI.section_style_box())
 	pantry_panel.add_child(preserve_section)
 
 	var preserve_margin: MarginContainer = MarginContainer.new()
-	preserve_margin.name = "PantryPreserveSectionPadding"
+	preserve_margin.name = "PantryPreservesSectionPadding"
 	preserve_margin.add_theme_constant_override("margin_left", PantryUI.section_margin())
 	preserve_margin.add_theme_constant_override("margin_top", PantryUI.section_margin())
 	preserve_margin.add_theme_constant_override("margin_right", PantryUI.section_margin())
@@ -1779,16 +1808,15 @@ func _build_ui() -> void:
 	preserve_section.add_child(preserve_margin)
 
 	var preserve_stack: VBoxContainer = VBoxContainer.new()
-	preserve_stack.name = "PantryPreserveSectionStack"
+	preserve_stack.name = "PantryPreservesSectionStack"
 	preserve_stack.add_theme_constant_override("separation", PantryUI.stat_card_gap())
 	preserve_margin.add_child(preserve_stack)
 
-	var preserve_header: Label = Label.new()
-	preserve_header.name = "PantryPreserveSectionHeader"
-	preserve_header.text = "PRESERVES"
-	preserve_header.custom_minimum_size = PantryUI.section_header_minimum_size()
-	_style_label(preserve_header, 12, Color("#725431"))
-	preserve_stack.add_child(preserve_header)
+	preserve_stack.add_child(PantryUI.create_section_header(
+		"PantryPreservesSection",
+		"Preserves",
+		_texture_from(item_textures, "jam")
+	))
 
 	pantry_preserve_stats_row = HBoxContainer.new()
 	pantry_preserve_stats_row.name = "PantryPreserveStatsRow"
@@ -1935,7 +1963,7 @@ func _build_ui() -> void:
 	# ============================================================
 
 	var planting_section: PanelContainer = PanelContainer.new()
-	planting_section.name = "PantryPlantingStockSection"
+	planting_section.name = "PantryPlantingSection"
 	planting_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	planting_section.add_theme_stylebox_override(
 		"panel",
@@ -1944,7 +1972,7 @@ func _build_ui() -> void:
 	pantry_panel.add_child(planting_section)
 
 	var planting_margin: MarginContainer = MarginContainer.new()
-	planting_margin.name = "PantryPlantingStockSectionPadding"
+	planting_margin.name = "PantryPlantingSectionPadding"
 	planting_margin.add_theme_constant_override("margin_left", PantryUI.section_margin())
 	planting_margin.add_theme_constant_override("margin_top", PantryUI.section_margin())
 	planting_margin.add_theme_constant_override("margin_right", PantryUI.section_margin())
@@ -1952,16 +1980,15 @@ func _build_ui() -> void:
 	planting_section.add_child(planting_margin)
 
 	var planting_stack: VBoxContainer = VBoxContainer.new()
-	planting_stack.name = "PantryPlantingStockSectionStack"
+	planting_stack.name = "PantryPlantingSectionStack"
 	planting_stack.add_theme_constant_override("separation", PantryUI.stat_card_gap())
 	planting_margin.add_child(planting_stack)
 
-	var planting_header: Label = Label.new()
-	planting_header.name = "PantryPlantingStockSectionHeader"
-	planting_header.text = "PLANTING STOCK"
-	planting_header.custom_minimum_size = PantryUI.section_header_minimum_size()
-	_style_label(planting_header, 12, Color("#725431"))
-	planting_stack.add_child(planting_header)
+	planting_stack.add_child(PantryUI.create_section_header(
+		"PantryPlantingSection",
+		"Planting Stock",
+		_texture_from(item_textures, "seeds")
+	))
 
 	pantry_planting_grid = GridContainer.new()
 	pantry_planting_grid.name = "PantryPlantingStockGrid"
@@ -2061,7 +2088,7 @@ func _build_ui() -> void:
 	# ============================================================
 
 	var about_section: PanelContainer = PanelContainer.new()
-	about_section.name = "PantryAboutJamSection"
+	about_section.name = "PantryAboutSection"
 	about_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	about_section.add_theme_stylebox_override(
 		"panel",
@@ -2070,7 +2097,7 @@ func _build_ui() -> void:
 	pantry_panel.add_child(about_section)
 
 	var about_margin: MarginContainer = MarginContainer.new()
-	about_margin.name = "PantryAboutJamSectionPadding"
+	about_margin.name = "PantryAboutSectionPadding"
 	about_margin.add_theme_constant_override("margin_left", PantryUI.section_margin())
 	about_margin.add_theme_constant_override("margin_top", PantryUI.section_margin())
 	about_margin.add_theme_constant_override("margin_right", PantryUI.section_margin())
@@ -2078,16 +2105,15 @@ func _build_ui() -> void:
 	about_section.add_child(about_margin)
 
 	var about_stack: VBoxContainer = VBoxContainer.new()
-	about_stack.name = "PantryAboutJamSectionStack"
+	about_stack.name = "PantryAboutSectionStack"
 	about_stack.add_theme_constant_override("separation", PantryUI.stat_card_gap())
 	about_margin.add_child(about_stack)
 
-	var about_header: Label = Label.new()
-	about_header.name = "PantryAboutJamSectionHeader"
-	about_header.text = "ABOUT JAM"
-	about_header.custom_minimum_size = PantryUI.section_header_minimum_size()
-	_style_label(about_header, 12, Color("#725431"))
-	about_stack.add_child(about_header)
+	about_stack.add_child(PantryUI.create_section_header(
+		"PantryAboutSection",
+		"About Jam",
+		_texture_from(ui_textures, "guide")
+	))
 
 	pantry_hint_label = Label.new()
 	pantry_hint_label.name = "PantryAboutJamText"
@@ -2239,6 +2265,128 @@ func _build_ui() -> void:
 
 # ============================================================
 # /*=== FUNCTION BUILD UI END ===*/
+# ============================================================
+
+# ============================================================
+# /*=== FUNCTION BUILD PAGE CHROME START ===*/
+# ============================================================
+
+func _build_page_chrome(parent: Node) -> void:
+	page_chrome_nodes = PageChromeUI.build()
+	var chrome: Control = page_chrome_nodes.get("chrome", null) as Control
+	if chrome != null:
+		parent.add_child(chrome)
+
+	var back_button: Button = page_chrome_nodes.get("back_button", null) as Button
+	if back_button != null:
+		_style_button(back_button, 18, "tertiary")
+		back_button.pressed.connect(_page_chrome_back)
+
+	var close_button: Button = page_chrome_nodes.get("close_button", null) as Button
+	if close_button != null:
+		_style_button(close_button, 18, "tertiary")
+		close_button.pressed.connect(_close_page_chrome)
+
+	var title_label: Label = page_chrome_nodes.get("title_label", null) as Label
+	if title_label != null:
+		_style_label(title_label, UIConstants.TITLE_SIZE, Color("#3b2b19"))
+
+	PageChromeUI.set_title(
+		page_chrome_nodes,
+		"Farm Pantry",
+		_texture_from(ui_textures, "pantry")
+	)
+	_build_global_bottom_navigation()
+
+
+
+
+# ============================================================
+# /*=== FUNCTION BUILD PAGE CHROME END ===*/
+# ============================================================
+
+# ============================================================
+# /*=== FUNCTION BUILD GLOBAL BOTTOM NAVIGATION START ===*/
+# ============================================================
+
+func _build_global_bottom_navigation() -> void:
+	bottom_nav_buttons.clear()
+
+	var bottom_row: HBoxContainer = page_chrome_nodes.get(
+		"bottom_row",
+		null
+	) as HBoxContainer
+	if bottom_row == null:
+		return
+
+	_add_bottom_nav_button(bottom_row, "farm", "Farm", 0, "GlobalBottomNavFarmButton")
+	_add_bottom_nav_button(bottom_row, "village", "Village", 1, "GlobalBottomNavVillageButton")
+	_add_bottom_nav_button(bottom_row, "pantry", "Pantry", 2, "GlobalBottomNavPantryButton")
+	_add_bottom_nav_button(bottom_row, "guide", "Guide", 3, "GlobalBottomNavGuideButton")
+	_add_bottom_nav_button(bottom_row, "more", "More", 4, "GlobalBottomNavMoreButton")
+
+
+func _add_bottom_nav_button(
+	parent: Control,
+	key: String,
+	label: String,
+	tab: int,
+	node_name: String
+) -> void:
+	var button: Button = BottomNavigationUI.add_item(
+		parent,
+		node_name,
+		label,
+		_tab_texture(tab)
+	)
+	button.tooltip_text = label
+	button.pressed.connect(func() -> void: call("_set_side_tab", tab))
+	bottom_nav_buttons[key] = button
+
+
+
+
+# ============================================================
+# /*=== FUNCTION BUILD GLOBAL BOTTOM NAVIGATION END ===*/
+# ============================================================
+
+# ============================================================
+# /*=== FUNCTION PAGE CHROME NAVIGATION START ===*/
+# ============================================================
+
+func _page_chrome_back() -> void:
+	side_tab = 0
+	panel_open = true
+	_update_ui()
+
+
+func _close_page_chrome() -> void:
+	panel_open = false
+	_update_ui()
+
+
+func _bottom_nav_active_key() -> String:
+	if not panel_open:
+		return ""
+
+	match side_tab:
+		0:
+			return "farm"
+		1:
+			return "village"
+		2:
+			return "pantry"
+		3:
+			return "guide"
+		4:
+			return "more"
+	return ""
+
+
+
+
+# ============================================================
+# /*=== FUNCTION PAGE CHROME NAVIGATION END ===*/
 # ============================================================
 
 # ============================================================
@@ -2795,6 +2943,8 @@ func _draw_farm() -> void:
 
 func _draw_open_drawer() -> void:
 	if not panel_open:
+		return
+	if _is_page_chrome_open():
 		return
 	DrawerUI.draw_drawer_shell(self, _drawer_layout())
 	_draw_drawer_cards()
@@ -4075,8 +4225,8 @@ func _update_transient_ui() -> void:
 		else:
 			message_label.text = ""
 	if dock_hint_label != null:
-		dock_hint_label.visible = panel_open
-		if panel_open:
+		dock_hint_label.visible = panel_open and not _is_page_chrome_open()
+		if dock_hint_label.visible:
 			dock_hint_label.text = "%s  • click icon again to close" % _drawer_header_text()
 
 
@@ -4120,6 +4270,13 @@ func _update_ui() -> void:
 	clipping_button.disabled = not can_clip_cutting
 	clipping_button.text = "🌿 Clip cutting (C)"
 	DrawerUI.apply_active_panel(_drawer_panels(), side_tab, panel_open)
+	var page_chrome: Control = page_chrome_nodes.get("chrome", null) as Control
+	if page_chrome != null:
+		page_chrome.visible = _is_page_chrome_open()
+	BottomNavigationUI.apply_active_state(
+		bottom_nav_buttons,
+		_bottom_nav_active_key()
+	)
 	for tab in tab_buttons.keys():
 		tab_buttons[tab].button_pressed = panel_open and int(tab) == side_tab
 	festival_label.text = _festival_text()

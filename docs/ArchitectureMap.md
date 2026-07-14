@@ -52,3 +52,7 @@
 - `scripts/ui/hud_ui.gd`
 - `scripts/ui/bottom_bar_ui.gd`
 - `scripts/ui/tool_panel_ui.gd`
+- `scripts/ui/page_chrome_ui.gd`
+  - Shared mobile-first page shell for migrated feature pages.
+- `scripts/ui/bottom_navigation_ui.gd`
+  - Shared bottom navigation item sizing, naming, icons, and active visual state.

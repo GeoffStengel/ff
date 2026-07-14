@@ -285,3 +285,30 @@ Rules established there:
 - Use a scrollable page shell when content is taller than the drawer.
 
 No bundled licensed font is currently present in the repository. Typography roles should use the current project font/fallback until a redistributable font is added through the shared theme.
+
+
+## Fig Farmer OS v1
+
+Fig Farmer OS v1 is the shared mobile-first page composition for migrated screens.
+
+The composition is:
+
+Page header
+-> Scrollable page content
+-> Bottom navigation
+
+Header rules:
+
+- Back button on the far left.
+- Feature icon and title centered together.
+- Close button on the far right.
+- The feature icon supports recognition; it is not the navigation control.
+
+Bottom navigation rules:
+
+- Use project textures, not emoji, for final runtime icons.
+- Keep labels readable.
+- Keep touch targets large enough for mouse and touch.
+- Show the selected page clearly.
+
+The old drawer stays available during migration. Pantry is the first migrated page; other pages should not be described as migrated until their content is actually moved into PageChrome.

@@ -208,6 +208,48 @@ static func quantity_style_box() -> StyleBoxFlat:
 
 
 # ============================================================
+# /*=== PANTRY SECTION HEADER START ===*/
+# ============================================================
+
+static func create_section_header(
+	node_prefix: String,
+	title: String,
+	icon: Texture2D
+) -> HBoxContainer:
+	var header: HBoxContainer = HBoxContainer.new()
+	header.name = "%sHeader" % node_prefix
+	header.custom_minimum_size = section_header_minimum_size()
+	header.add_theme_constant_override("separation", int(UIConstants.INNER_GAP))
+
+	var icon_rect: TextureRect = TextureRect.new()
+	icon_rect.name = "%sHeaderIcon" % node_prefix
+	icon_rect.custom_minimum_size = Vector2(
+		UIConstants.SECTION_HEADER_ICON_SIZE,
+		UIConstants.SECTION_HEADER_ICON_SIZE
+	)
+	icon_rect.texture = icon
+	icon_rect.visible = icon != null
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(icon_rect)
+
+	var title_label: Label = Label.new()
+	title_label.name = "%sHeaderTitle" % node_prefix
+	title_label.text = title
+	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_label.add_theme_font_size_override("font_size", UIConstants.SECTION_HEADER_SIZE)
+	title_label.add_theme_color_override("font_color", Color("#725431"))
+	header.add_child(title_label)
+
+	return header
+
+# ============================================================
+# /*=== PANTRY SECTION HEADER END ===*/
+# ============================================================
+
+
+# ============================================================
 # /*=== PANTRY DISPLAY COPY START ===*/
 # ============================================================
 
@@ -242,6 +284,7 @@ static func apply_layout(
 		"scroll",
 		null
 	) as ScrollContainer
+	var container_mode: bool = bool(controls.get("container_mode", false))
 
 	var panel_width: float = content_width(content)
 	var panel_offset: Vector2 = Vector2(
@@ -249,7 +292,7 @@ static func apply_layout(
 		PANEL_TOP_PAD
 	)
 
-	if scroll != null:
+	if scroll != null and not container_mode:
 		scroll.position = content.position
 		scroll.custom_minimum_size = content.size
 		scroll.size = content.size
@@ -265,13 +308,16 @@ static func apply_layout(
 			)
 		)
 
-		if scroll != null:
+		if container_mode:
+			panel.position = Vector2.ZERO
+		elif scroll != null:
 			panel.position = panel_offset
 		else:
 			panel.position = content.position + panel_offset
 
 		panel.custom_minimum_size = panel_size
-		panel.size = panel_size
+		if not container_mode:
+			panel.size = panel_size
 		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 

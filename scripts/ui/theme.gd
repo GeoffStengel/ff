@@ -120,6 +120,24 @@ static func quantity_badge_style() -> StyleBoxFlat:
 		1
 	)
 
+
+static func page_chrome_style() -> StyleBoxFlat:
+	return rounded_style(
+		JOURNAL_PAGE,
+		JOURNAL_BORDER_STRONG,
+		UIConstants.PANEL_RADIUS,
+		2
+	)
+
+
+static func bottom_navigation_style() -> StyleBoxFlat:
+	return rounded_style(
+		Color("#f8eed8"),
+		Color("#ead6aa"),
+		UIConstants.CARD_RADIUS,
+		1
+	)
+
 # ============================================================
 # /*=== STYLEBOX HELPERS END ===*/
 # ============================================================

@@ -88,6 +88,8 @@ NPCs
 [ ] Shared Button Styles
 [ ] Mobile-First Responsive Layout
 [x] Pantry 3.0 Prototype
+[x] PageChrome v1
+[x] BottomNavigation v1
 [ ] Rollout to Remaining UI Screens
 
 ## Long-Term Goal
@@ -121,6 +123,8 @@ Target: <1500 lines
 - [x] HelpUI
 - [x] Feature modules complete
 - [x] Village Requests visual polish
+- [x] PageChromeUI v1
+- [x] BottomNavigationUI v1
 
 ### Systems
 - [x] Save

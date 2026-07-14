@@ -239,3 +239,24 @@ Complete one bounded mobile-first Pantry redesign phase without changing gamepla
 
 - Manually test Pantry in Godot at desktop and narrow widths.
 - If the prototype feels good, migrate Guide next because it has mostly static educational content and lower gameplay risk.
+
+
+## 2026-07-14 Fig Farmer OS v1
+
+### Goal
+
+Create the first reusable mobile-first page shell and migrate Pantry into it without changing gameplay.
+
+### Completed
+
+- Added `PageChromeUI` for the shared page header, centered title group, content scroll host, and bottom navigation host.
+- Added `BottomNavigationUI` for touch-friendly nav items with icons, labels, runtime names, and selected state.
+- Migrated Pantry content into the PageChrome content host.
+- Reused existing `_set_side_tab()` callbacks for bottom navigation.
+- Kept the old drawer navigation as fallback for Farm, Village Requests, Guide, and More/Help.
+- Back now returns to the Farm/default drawer view because no page-history stack exists yet.
+
+### Next
+
+- Manually test PageChrome and Pantry in Godot.
+- Migrate Guide next if the PageChrome pattern feels solid.

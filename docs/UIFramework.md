@@ -183,3 +183,34 @@ Drawer content width
 -> expanding label plus fixed quantity badge
 
 At narrow widths, Pantry item grids fall back to one column while preserving callbacks and gameplay references in `main.gd`.
+
+
+## Page Chrome
+
+PageChrome is the shared mobile-first shell for migrated feature screens.
+
+Structure:
+
+PageChrome
+-> PageHeader
+-> Scrollable feature content
+-> BottomNavigation
+
+The header owns a left Back slot, centered title group, and right Close slot. The title group contains the feature icon on the left and the page title on the right.
+
+Desktop keeps the same mobile composition. Larger widths center the readable feature content and add breathing room rather than switching to an unrelated desktop layout.
+
+
+## Bottom Navigation
+
+BottomNavigation is the shared navigation row for migrated pages.
+
+Each item has:
+
+- icon,
+- readable label,
+- descriptive runtime node name,
+- active/selected state,
+- touch-friendly minimum size.
+
+During migration, bottom-nav callbacks reuse existing drawer/tab callbacks. The old drawer navigation remains available as a fallback until each page is migrated.

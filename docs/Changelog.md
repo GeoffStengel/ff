@@ -95,3 +95,7 @@
 - Added a scrollable Pantry drawer shell while keeping `FarmPantryPanel` as the Pantry VBox.
 - Made Pantry item grids responsive so they can fall back from two columns to one column at narrow widths.
 - Kept Pantry gameplay behavior, callbacks, save keys, inventory values, crafting actions, and button references unchanged.
+- Added PageChromeUI as the first shared Fig Farmer OS v1 page shell.
+- Added BottomNavigationUI for shared bottom navigation items and selected state.
+- Moved Pantry into the PageChrome content host while keeping old drawer navigation as migration fallback.
+- Reused existing side-tab callbacks for bottom navigation.
