@@ -76,3 +76,42 @@ Good:
 Bad:
 
 # Add one to progress.
+
+---
+
+## Runtime UI Node Names
+
+Runtime-created UI Controls should get descriptive `.name` values when they are important for live inspection.
+
+Use:
+
+`Feature + Role + OptionalIndex`
+
+Examples:
+
+- `VillageRequestsPanel`
+- `VillageRequestsPagerCard`
+- `PantryHarvestCard_0`
+- `PantryHarvestAmount_0`
+- `TopHUDDayLabel`
+- `BottomStatusBarActionCard`
+
+Name feature containers, cards, important labels, grids, rows, and buttons first. Decorative spacers only need names when they help debug layout.
+
+---
+
+## UI Debug Overlay
+
+The developer-only runtime UI inspector toggles with `Ctrl+Shift+D`.
+
+It draws visible Control bounds, highlights the hovered Control, and shows runtime layout metadata without changing gameplay, layout, save data, callbacks, or mouse input.
+
+
+## Additional Standards
+
+- One responsibility per helper function.
+- Avoid creating anonymous Controls. Name important runtime Controls immediately after creation.
+- Do not mix layout code with gameplay logic.
+- Every important Container should receive a descriptive runtime `.name`.
+- Prefer composition over deeply nested helper functions.
+- Keep feature-specific UI inside its corresponding UI module whenever practical.

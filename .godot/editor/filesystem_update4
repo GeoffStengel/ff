@@ -1,2 +1,3 @@
-res://scripts/ui/village_requests_ui.gd
+res://scripts/ui/pantry_ui.gd
 res://scripts/main.gd
+res://scripts/ui/village_requests_ui.gd

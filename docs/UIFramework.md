@@ -101,3 +101,39 @@ to build its own interface.
 Every UI screen should be understandable by opening ONE file.
 
 Every visual change should require changing ONE place.
+
+
+## Common Layout Patterns
+
+Preferred Container usage:
+
+- VBoxContainer
+  - Vertical page layout.
+  - Similar to CSS flex-direction: column.
+
+- HBoxContainer
+  - Horizontal rows.
+  - Similar to CSS flex row.
+
+- GridContainer
+  - Uniform card grids.
+  - Similar to CSS grid.
+
+Preferred responsive pattern:
+
+Page
+↓
+Section
+↓
+Grid / Row
+↓
+Card
+↓
+Content
+
+Whenever practical:
+
+- Parent Containers define available width.
+- Child Containers use `SIZE_EXPAND_FILL`.
+- `custom_minimum_size` defines minimum size, not fixed size.
+- Avoid hardcoded widths unless required by the design.

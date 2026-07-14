@@ -172,3 +172,49 @@ The current build is a strong known-good fallback point before the next feature 
 - Update the repository.
 - Create a known-good checkpoint commit/tag.
 - Continue UI/UX polish and bounded `main.gd` cleanup.
+
+## 2026-07-13 - Runtime UI Inspection
+
+### Goal
+
+Add safe runtime UI inspection tooling and descriptive runtime node names without changing gameplay, layout, save compatibility, callbacks, or architecture.
+
+### Completed
+
+- Added `scripts/ui/ui_debug_overlay.gd`.
+- Wired a high-layer developer overlay into `main.gd`.
+- Ctrl+Shift+D toggles visible Control bounds and hovered Control metadata.
+- Named important runtime-created Controls across HUD, tool/menu dock, drawer panels, Village Requests, Pantry, Guide, Help, bottom bar, and dialogue.
+- Documented the runtime naming convention in CodingStandards.
+
+### Next
+
+- Manually test Ctrl+Shift+D in Godot and hover over the Village Requests pager card, Pantry cards, HUD labels, and bottom bar labels.
+
+
+## 2026-07-14 UI Design Direction
+
+### Goal
+
+Establish a long-term visual direction for the entire game before beginning a larger UI redesign.
+
+### Discussion
+
+- Evaluated the current Pantry layout using the runtime UI debug overlay.
+- Identified several UX pain points:
+  - weak visual hierarchy,
+  - inconsistent spacing,
+  - excessive use of bordered panels,
+  - generic typography,
+  - competing button styles,
+  - limited mobile responsiveness.
+- Explored a mobile-first interface inspired by modern delivery apps and cozy farming games.
+- Agreed that desktop layouts should expand the mobile experience rather than becoming completely different interfaces.
+- Decided to continue growing `UIStyleGuide.md` as the project's design system instead of creating a separate design document.
+
+### Next
+
+- Define typography and font selection.
+- Establish a reusable card and button system.
+- Design a shared visual language for all feature screens.
+- Prototype a redesigned Pantry using the updated style guide before applying the design system across the rest of the game.

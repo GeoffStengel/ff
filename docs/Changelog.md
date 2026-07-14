@@ -70,6 +70,8 @@
 - Polished the Village Requests screen into a cleaner delivery-app-style layout.
 - Made the selected request a single hero card with the primary Accept/Fulfill action.
 - Moved Sell crate out of the primary action row and expanded the available request list area.
+- Added a developer-only UI debug overlay toggled with Ctrl+Shift+D.
+- Added descriptive runtime names to important HUD, dock, drawer, Village Requests, Pantry, Guide, Help, bottom bar, and dialogue Controls.
 
 ### Systems
 

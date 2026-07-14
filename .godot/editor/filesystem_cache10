@@ -1,5 +1,5 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1783839428
+::res://::1783970432
 README.md::TextFile::-1::1783557881::0::1::::<><><>0<>0<><>::
 ::res://assets/::1783442404
 README.md::TextFile::-1::1783442404::0::1::::<><><>0<>0<><>::
@@ -64,11 +64,11 @@ water_icon_48x48.png::CompressedTexture2D::7414505407977729840::1783475278::1783
 ::res://docs/::1783702843
 Architecture.md::TextFile::-1::1783728440::0::1::::<><><>0<>0<><>::
 ArchitectureMap.md::TextFile::-1::1783728440::0::1::::<><><>0<>0<><>::
-Changelog.md::TextFile::-1::1783738182::0::1::::<><><>0<>0<><>::
-CodingStandards.md::TextFile::-1::1783576565::0::1::::<><><>0<>0<><>::
+Changelog.md::TextFile::-1::1783967756::0::1::::<><><>0<>0<><>::
+CodingStandards.md::TextFile::-1::1783967756::0::1::::<><><>0<>0<><>::
 DecisionLog.md::TextFile::-1::1783728440::0::1::::<><><>0<>0<><>::
 Roadmap.md::TextFile::-1::1783738182::0::1::::<><><>0<>0<><>::
-SessionNotes.md::TextFile::-1::1783738182::0::1::::<><><>0<>0<><>::
+SessionNotes.md::TextFile::-1::1783967756::0::1::::<><><>0<>0<><>::
 UIFramework.md::TextFile::-1::1783581697::0::1::::<><><>0<>0<><>::
 UIStyleGuide.md::TextFile::-1::1783576594::0::1::::<><><>0<>0<><>::
 ::res://scenes/::1783269443
@@ -80,7 +80,7 @@ crop_system.gd::GDScript::7911374833322298650::1783572273::0::1::::<>RefCounted<
 game_data.gd::GDScript::4982112599363925560::1783725377::0::1::::<>RefCounted<><>0<>0<><>::
 inventory_system.gd::GDScript::7509249196113749933::1783728177::0::1::::<>RefCounted<><>0<>0<><>::
 layout_system.gd::GDScript::9180146551763822040::1783700141::0::1::::<>RefCounted<><>0<>0<><>::
-main.gd::GDScript::2273611509602517810::1783838055::0::1::::<>Node2D<><>0<>0<><>::
+main.gd::GDScript::2273611509602517810::1783967885::0::1::::<>Node2D<><>0<>0<><>::
 order_system.gd::GDScript::3716504970487421389::1783810668::0::1::::<>RefCounted<><>0<>0<><>::
 save_system.gd::GDScript::2272498181513244087::1783572273::0::1::::<>RefCounted<><>0<>0<><>::
 text_library.gd::GDScript::7755593132861571877::1783728372::0::1::::<>RefCounted<><>0<>0<><>::
@@ -93,7 +93,7 @@ economy_system.gd::GDScript::8008316366755824492::1783728154::0::1::::<>RefCount
 festival_system.gd::GDScript::4810260275682637733::1783728480::0::1::::<>RefCounted<><>0<>0<><>::
 relationship_system.gd::GDScript::274542213786455472::1783728609::0::1::::<>RefCounted<><>0<>0<><>::
 weather_system.gd::GDScript::4960682203200609975::1783728352::0::1::::<>RefCounted<><>0<>0<><>::
-::res://scripts/ui/::1783703195
+::res://scripts/ui/::1783969049
 bottom_bar_ui.gd::GDScript::1477298780097539394::1783666086::0::1::::<>RefCounted<><>0<>0<><>::
 drawer_ui.gd::GDScript::879168860509490937::1783703012::0::1::::<>RefCounted<><>0<>0<><>::
 farm_controls_ui.gd::GDScript::8853416043255903558::1783703034::0::1::::<>RefCounted<><>0<>0<><>::
@@ -101,9 +101,10 @@ guide_ui.gd::GDScript::3171589307332257983::1783703052::0::1::::<>RefCounted<><>
 help_ui.gd::GDScript::4926855726139622605::1783703061::0::1::::<>RefCounted<><>0<>0<><>::
 hud_ui.gd::GDScript::1370265079712561746::1783665453::0::1::::<>RefCounted<><>0<>0<><>::
 layout.gd::GDScript::2142959499024463974::1783587212::0::1::::<>RefCounted<><>0<>0<><>::
-pantry_ui.gd::GDScript::2076820126318056914::1783703043::0::1::::<>RefCounted<><>0<>0<><>::
+pantry_ui.gd::GDScript::2076820126318056914::1783970406::0::1::::<>RefCounted<><>0<>0<><>::
 theme.gd::GDScript::6189813388524192219::1783587212::0::1::::<>RefCounted<><>0<>0<><>::
 tool_panel_ui.gd::GDScript::6447854374902706828::1783667135::0::1::::<>RefCounted<><>0<>0<><>::
 ui_constants.gd::GDScript::6789512573559334797::1783578107::0::1::::<>RefCounted<><>0<>0<><>::
-village_requests_ui.gd::GDScript::4563072564672798466::1783839396::0::1::::VillageRequestsUI<>RefCounted<><>0<>0<><>::
+ui_debug_overlay.gd::GDScript::5093915320252805675::1783967667::0::1::::UIDebugOverlay<>CanvasLayer<><>0<>0<><>::
+village_requests_ui.gd::GDScript::4563072564672798466::1783842990::0::1::::VillageRequestsUI<>RefCounted<><>0<>0<><>::
 ::res://tests/::1783577015
