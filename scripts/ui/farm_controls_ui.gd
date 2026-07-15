@@ -19,14 +19,14 @@ extends RefCounted
 # ============================================================
 
 
-const PANEL_GAP := 5
+const PANEL_GAP := 8
 
-const ACTION_HINT_H := 24.0
-const SHOP_BUTTON_H := 32.0
+const ACTION_HINT_H := 38.0
+const SHOP_BUTTON_H := 40.0
 const CLIPPING_BUTTON_H := 28.0
-const UPGRADE_BUTTON_H := 32.0
-const DAY_BUTTON_H := 34.0
-const SAVE_BUTTON_H := 30.0
+const UPGRADE_BUTTON_H := 40.0
+const DAY_BUTTON_H := 44.0
+const SAVE_BUTTON_H := 44.0
 
 # ============================================================
 # /*=== FARM CONTROLS CONSTANTS END ===*/
@@ -62,7 +62,7 @@ static func day_button_minimum_size() -> Vector2:
 
 
 static func save_button_minimum_size() -> Vector2:
-	return Vector2(0.0, SAVE_BUTTON_H)
+	return Vector2(44.0, SAVE_BUTTON_H)
 
 # ============================================================
 # /*=== FARM CONTROLS SIZE HELPERS END ===*/
@@ -103,12 +103,7 @@ static func apply_layout(controls: Dictionary, content: Rect2) -> void:
 
 
 static func card_backplates(content: Rect2) -> Array[Rect2]:
-	var card_w: float = content.size.x
-	var result: Array[Rect2] = []
-	result.append(Rect2(Vector2(content.position.x, content.position.y + 48), Vector2(card_w, 116)))
-	result.append(Rect2(Vector2(content.position.x, content.position.y + 186), Vector2(card_w, 158)))
-	result.append(Rect2(Vector2(content.position.x, content.position.y + 368), Vector2(card_w, 176)))
-	return result
+	return []
 
 
 static func _set_minimum_size(controls: Dictionary, key: String, size: Vector2) -> void:

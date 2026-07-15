@@ -176,7 +176,6 @@ var pantry_preserve_actions: HBoxContainer
 var pantry_planting_grid: GridContainer
 var guide_panel: VBoxContainer
 var help_panel: VBoxContainer
-var market_title: Label
 var crate_button: Button
 var order_label: Label
 var festival_label: Label
@@ -1223,10 +1222,6 @@ func _tab_texture(tab: int) -> Texture2D:
 		4:
 			return _texture_from(ui_textures, "help")
 	return null
-
-
-
-
 # ============================================================
 # /*=== FUNCTION TAB TEXTURE END ===*/
 # ============================================================
@@ -1234,7 +1229,6 @@ func _tab_texture(tab: int) -> Texture2D:
 # ============================================================
 # /*=== FUNCTION BUILD UI START ===*/
 # ============================================================
-
 func _build_ui() -> void:
 	var ui: CanvasLayer = CanvasLayer.new()
 	ui.name = "MainUICanvas"
@@ -1348,18 +1342,44 @@ func _build_ui() -> void:
 	controls_panel.add_theme_constant_override("separation", FarmControlsUI.panel_separation())
 	_add_page_chrome_panel(controls_panel)
 
-	var title: Label = Label.new()
-	title.name = "FarmControlsTitle"
-	title.text = "Fig Farmer 🌿"
-	_style_label(title, 26, Color("#3b2b19"))
-	controls_panel.add_child(title)
 
+	var cuttings_card: PanelContainer = PanelContainer.new()
+	cuttings_card.name = "FarmCuttingsCard"
+	cuttings_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cuttings_card.add_theme_stylebox_override(
+		"panel",
+		UITheme.farm_section_card_style()
+	)
+	controls_panel.add_child(cuttings_card)
 
-	_add_section_label(controls_panel, "CUTTINGS")
+	var cuttings_margin: MarginContainer = MarginContainer.new()
+	cuttings_margin.name = "FarmCuttingsCardMargin"
+	cuttings_margin.add_theme_constant_override("margin_left", int(UIConstants.CARD_PADDING))
+	cuttings_margin.add_theme_constant_override("margin_top", int(UIConstants.CARD_PADDING))
+	cuttings_margin.add_theme_constant_override("margin_right", int(UIConstants.CARD_PADDING))
+	cuttings_margin.add_theme_constant_override("margin_bottom", int(UIConstants.CARD_PADDING))
+	cuttings_card.add_child(cuttings_margin)
+
+	var cuttings_content: VBoxContainer = VBoxContainer.new()
+	cuttings_content.name = "FarmCuttingsContent"
+	cuttings_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cuttings_content.add_theme_constant_override("separation", int(UIConstants.CARD_GAP))
+	cuttings_margin.add_child(cuttings_content)
+
+	var cuttings_header: HBoxContainer = SectionHeaderUI.create(
+		"FarmCuttingsHeader",
+		"Cuttings",
+		_texture_from(ui_textures, "cuttings")
+	)
+	cuttings_header.name = "FarmCuttingsHeader"
+	cuttings_content.add_child(cuttings_header)
+
 	var variety_row: HBoxContainer = HBoxContainer.new()
 	variety_row.name = "FarmCuttingsRow"
-	variety_row.add_theme_constant_override("separation", 5)
-	controls_panel.add_child(variety_row)
+	variety_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	variety_row.add_theme_constant_override("separation", int(UIConstants.INNER_GAP))
+	cuttings_content.add_child(variety_row)
+
 	for i in varieties.size():
 		_add_variety_button(variety_row, i)
 
@@ -1367,103 +1387,221 @@ func _build_ui() -> void:
 	action_hint.name = "FarmActionHint"
 	action_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	action_hint.custom_minimum_size = FarmControlsUI.action_hint_minimum_size()
-	_style_label(action_hint, 13, Color("#4c3c25"))
-	controls_panel.add_child(action_hint)
-
-	_add_section_label(controls_panel, "SHOP")
-	var shop_row: HBoxContainer = HBoxContainer.new()
-	shop_row.name = "FarmShopRow"
-	shop_row.add_theme_constant_override("separation", 8)
-	controls_panel.add_child(shop_row)
-	buy_cuttings_button = Button.new()
-	buy_cuttings_button.name = "FarmBuyCuttingsButton"
-	buy_cuttings_button.custom_minimum_size = FarmControlsUI.shop_button_minimum_size()
-	_style_button(buy_cuttings_button, 13, "secondary")
-	_decorate_button_icon(buy_cuttings_button, _texture_from(item_textures, "seeds"))
-	buy_cuttings_button.pressed.connect(_buy_cuttings)
-	shop_row.add_child(buy_cuttings_button)
-	buy_compost_button = Button.new()
-	buy_compost_button.name = "FarmBuyCompostButton"
-	buy_compost_button.text = "💰 Compost x2        $7"
-	buy_compost_button.custom_minimum_size = FarmControlsUI.shop_button_minimum_size()
-	_style_button(buy_compost_button, 13, "secondary")
-	_decorate_button_icon(buy_compost_button, _texture_from(item_textures, "fertilizer"))
-	buy_compost_button.pressed.connect(_buy_compost)
-	shop_row.add_child(buy_compost_button)
+	action_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_label(action_hint, UIConstants.SMALL_SIZE, Color("#5b492e"))
+	cuttings_content.add_child(action_hint)
 
 	clipping_row = HBoxContainer.new()
 	clipping_row.name = "FarmClippingRow"
 	clipping_row.add_theme_constant_override("separation", 0)
-	controls_panel.add_child(clipping_row)
+	cuttings_content.add_child(clipping_row)
+
 	clipping_button = Button.new()
 	clipping_button.name = "FarmClipCuttingButton"
 	clipping_button.text = "Clip cutting (C)"
 	clipping_button.custom_minimum_size = FarmControlsUI.clipping_button_minimum_size()
+	clipping_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_button(clipping_button, 12, "muted")
-	clipping_button.pressed.connect(func() -> void: call("_take_cutting_from_farmer_plot"))
+	clipping_button.pressed.connect(
+		func() -> void:
+			call("_take_cutting_from_farmer_plot")
+	)
 	clipping_row.add_child(clipping_button)
+
+	var shop_card: PanelContainer = PanelContainer.new()
+	shop_card.name = "FarmShopCard"
+	shop_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shop_card.add_theme_stylebox_override(
+		"panel",
+		UITheme.farm_section_card_style()
+	)
+	controls_panel.add_child(shop_card)
+
+	var shop_margin: MarginContainer = MarginContainer.new()
+	shop_margin.name = "FarmShopCardMargin"
+	shop_margin.add_theme_constant_override("margin_left", int(UIConstants.CARD_PADDING))
+	shop_margin.add_theme_constant_override("margin_top", int(UIConstants.CARD_PADDING))
+	shop_margin.add_theme_constant_override("margin_right", int(UIConstants.CARD_PADDING))
+	shop_margin.add_theme_constant_override("margin_bottom", int(UIConstants.CARD_PADDING))
+	shop_card.add_child(shop_margin)
+
+	var shop_content: VBoxContainer = VBoxContainer.new()
+	shop_content.name = "FarmShopContent"
+	shop_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shop_content.add_theme_constant_override("separation", int(UIConstants.CARD_GAP))
+	shop_margin.add_child(shop_content)
+
+	var shop_header: HBoxContainer = SectionHeaderUI.create(
+		"FarmShopHeader",
+		"Shop",
+		_texture_from(ui_textures, "coin")
+	)
+	shop_header.name = "FarmShopHeader"
+	shop_content.add_child(shop_header)
+
+	var shop_row: HBoxContainer = HBoxContainer.new()
+	shop_row.name = "FarmShopPurchaseRow"
+	shop_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shop_row.add_theme_constant_override("separation", int(UIConstants.CARD_GAP))
+	shop_content.add_child(shop_row)
+
+	buy_cuttings_button = Button.new()
+	buy_cuttings_button.name = "FarmBuyCuttingsButton"
+	buy_cuttings_button.custom_minimum_size = FarmControlsUI.shop_button_minimum_size()
+	buy_cuttings_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_button(buy_cuttings_button, 13, "secondary")
+	_decorate_button_icon(
+		buy_cuttings_button,
+		_texture_from(item_textures, "seeds")
+	)
+	buy_cuttings_button.pressed.connect(_buy_cuttings)
+	shop_row.add_child(buy_cuttings_button)
+
+	buy_compost_button = Button.new()
+	buy_compost_button.name = "FarmBuyCompostButton"
+	buy_compost_button.text = "Compost x2  $7"
+	buy_compost_button.custom_minimum_size = FarmControlsUI.shop_button_minimum_size()
+	buy_compost_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_button(buy_compost_button, 13, "secondary")
+	_decorate_button_icon(
+		buy_compost_button,
+		_texture_from(item_textures, "fertilizer")
+	)
+	buy_compost_button.pressed.connect(_buy_compost)
+	shop_row.add_child(buy_compost_button)
 
 	var upgrade_row: HBoxContainer = HBoxContainer.new()
 	upgrade_row.name = "FarmUpgradeRow"
-	upgrade_row.add_theme_constant_override("separation", 8)
-	controls_panel.add_child(upgrade_row)
+	upgrade_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	upgrade_row.add_theme_constant_override("separation", int(UIConstants.CARD_GAP))
+	shop_content.add_child(upgrade_row)
+
 	barrel_button = Button.new()
 	barrel_button.name = "FarmBarrelUpgradeButton"
 	barrel_button.custom_minimum_size = FarmControlsUI.upgrade_button_minimum_size()
+	barrel_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_button(barrel_button, 13, "secondary")
-	_decorate_button_icon(barrel_button, _texture_from(item_textures, "barrel"))
+	_decorate_button_icon(
+		barrel_button,
+		_texture_from(item_textures, "barrel")
+	)
 	barrel_button.pressed.connect(_buy_barrel_upgrade)
 	upgrade_row.add_child(barrel_button)
+
 	garden_button = Button.new()
 	garden_button.name = "FarmPollinatorGardenButton"
 	garden_button.custom_minimum_size = FarmControlsUI.upgrade_button_minimum_size()
+	garden_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_button(garden_button, 13, "secondary")
-	_decorate_button_icon(garden_button, _texture_from(item_textures, "flower"))
+	_decorate_button_icon(
+		garden_button,
+		_texture_from(item_textures, "flower")
+	)
 	garden_button.pressed.connect(_buy_pollinator_garden)
 	upgrade_row.add_child(garden_button)
 
-	_add_section_label(controls_panel, "DAY")
-	var day_row: HBoxContainer = HBoxContainer.new()
-	day_row.name = "FarmDayRow"
-	day_row.add_theme_constant_override("separation", 0)
-	controls_panel.add_child(day_row)
+	var day_card: PanelContainer = PanelContainer.new()
+	day_card.name = "FarmDayCard"
+	day_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	day_card.add_theme_stylebox_override(
+		"panel",
+		UITheme.farm_section_card_style()
+	)
+	controls_panel.add_child(day_card)
+
+	var day_margin: MarginContainer = MarginContainer.new()
+	day_margin.name = "FarmDayCardMargin"
+	day_margin.add_theme_constant_override("margin_left", int(UIConstants.CARD_PADDING))
+	day_margin.add_theme_constant_override("margin_top", int(UIConstants.CARD_PADDING))
+	day_margin.add_theme_constant_override("margin_right", int(UIConstants.CARD_PADDING))
+	day_margin.add_theme_constant_override("margin_bottom", int(UIConstants.CARD_PADDING))
+	day_card.add_child(day_margin)
+
+	var day_content: VBoxContainer = VBoxContainer.new()
+	day_content.name = "FarmDayContent"
+	day_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	day_content.add_theme_constant_override("separation", int(UIConstants.CARD_GAP))
+	day_margin.add_child(day_content)
+
+	var day_header: HBoxContainer = SectionHeaderUI.create(
+		"FarmDayHeader",
+		"Day",
+		_texture_from(ui_textures, "day")
+	)
+	day_header.name = "FarmDayHeader"
+	day_content.add_child(day_header)
+
 	day_button = Button.new()
 	day_button.name = "FarmEndDayButton"
-	day_button.text = "🌙  End Day"
+	day_button.text = "End Day"
 	day_button.custom_minimum_size = FarmControlsUI.day_button_minimum_size()
+	day_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_button(day_button, 13, "action")
 	day_button.pressed.connect(_start_next_day)
-	day_row.add_child(day_button)
+	day_content.add_child(day_button)
 
 	var save_row: HBoxContainer = HBoxContainer.new()
-	save_row.name = "FarmSaveRow"
-	save_row.add_theme_constant_override("separation", 8)
-	controls_panel.add_child(save_row)
+	save_row.name = "FarmUtilityRow"
+	save_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	save_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	save_row.add_theme_constant_override("separation", int(UIConstants.CARD_GAP))
+	day_content.add_child(save_row)
+
+	var utility_button_size := Vector2(
+		UIConstants.TOUCH_TARGET_MIN,
+		UIConstants.TOUCH_TARGET_MIN
+	)
+
 	save_button = Button.new()
 	save_button.name = "FarmSaveButton"
-	save_button.text = "▣ Save"
-	save_button.custom_minimum_size = FarmControlsUI.save_button_minimum_size()
-	_style_button(save_button, 12, "secondary")
-	save_button.pressed.connect(func() -> void: call("_save_game"))
+	save_button.text = "💾"
+	save_button.tooltip_text = "Save game"
+	save_button.custom_minimum_size = utility_button_size
+	save_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_style_button(save_button, 16, "secondary")
+	save_button.pressed.connect(
+		func() -> void:
+			call("_save_game")
+	)
 	save_row.add_child(save_button)
+
 	load_button = Button.new()
 	load_button.name = "FarmLoadButton"
-	load_button.text = "▣ Load"
-	load_button.custom_minimum_size = FarmControlsUI.save_button_minimum_size()
-	_style_button(load_button, 12, "secondary")
-	load_button.pressed.connect(func() -> void: call("_load_game"))
+	load_button.text = "📂"
+	load_button.tooltip_text = "Load game"
+	load_button.custom_minimum_size = utility_button_size
+	load_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_style_button(load_button, 16, "secondary")
+	load_button.pressed.connect(
+		func() -> void:
+			call("_load_game")
+	)
 	save_row.add_child(load_button)
+
 	pause_button = Button.new()
 	pause_button.name = "FarmPauseButton"
-	pause_button.custom_minimum_size = FarmControlsUI.save_button_minimum_size()
-	_style_button(pause_button, 12, "secondary")
-	pause_button.pressed.connect(func() -> void: call("_toggle_pause"))
+	pause_button.text = "Ⅱ"
+	pause_button.tooltip_text = "Pause game"
+	pause_button.custom_minimum_size = utility_button_size
+	pause_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_style_button(pause_button, 16, "secondary")
+	pause_button.pressed.connect(
+		func() -> void:
+			call("_toggle_pause")
+	)
 	save_row.add_child(pause_button)
+
 	sound_button = Button.new()
 	sound_button.name = "FarmSoundButton"
-	sound_button.custom_minimum_size = FarmControlsUI.save_button_minimum_size()
-	_style_button(sound_button, 12, "secondary")
-	sound_button.pressed.connect(func() -> void: call("_toggle_sound"))
+	sound_button.text = "🔊"
+	sound_button.tooltip_text = "Mute sound"
+	sound_button.custom_minimum_size = utility_button_size
+	sound_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_style_button(sound_button, 16, "secondary")
+	sound_button.pressed.connect(
+		func() -> void:
+			call("_toggle_sound")
+	)
 	save_row.add_child(sound_button)
 
 	# ============================================================
@@ -1474,13 +1612,6 @@ func _build_ui() -> void:
 	_add_page_chrome_panel(market_panel)
 
 	var content: Rect2 = _village_requests_content_rect()
-	market_title = Label.new()
-	market_title.name = "VillageRequestsTitle"
-	market_title.text = "Village Requests"
-	market_title.custom_minimum_size = VillageRequestsUI.title_minimum_size(content)
-	_style_label(market_title, 25, Color("#3b2b19"))
-	market_panel.add_child(market_title)
-
 	_add_market_section_label(market_panel, "WEEKLY CONTRACT")
 	festival_label = Label.new()
 	festival_label.name = "VillageRequestsWeeklyContract"
@@ -1735,22 +1866,6 @@ func _build_ui() -> void:
 	_add_page_chrome_panel(pantry_panel)
 
 	# ============================================================
-	# /*=== PANTRY TITLE START ===*/
-	# ============================================================
-
-	var pantry_title: Label = Label.new()
-	pantry_title.name = "PantryTitle"
-	pantry_title.text = "Farm Pantry 🫙"
-	pantry_title.custom_minimum_size = PantryUI.title_minimum_size()
-	pantry_title.visible = false
-	_style_label(pantry_title, 25, Color("#3b2b19"))
-	pantry_panel.add_child(pantry_title)
-
-	# ============================================================
-	# /*=== PANTRY TITLE END ===*/
-	# ============================================================
-
-	# ============================================================
 	# /*=== PANTRY HARVEST GRID START ===*/
 	# ------------------------------------------------------------
 	# Each harvest card uses the real fig texture rather than an
@@ -1812,7 +1927,7 @@ func _build_ui() -> void:
 		harvest_card_style.content_margin_right = 8.0
 		harvest_card_style.content_margin_top = 4.0
 		harvest_card_style.content_margin_bottom = 4.0
-		
+
 		harvest_card.add_theme_stylebox_override(
 			"panel",
 			harvest_card_style
@@ -2229,12 +2344,6 @@ func _build_ui() -> void:
 	guide_panel.add_theme_constant_override("separation", GuideUI.panel_separation())
 	_add_page_chrome_panel(guide_panel)
 
-	var guide_title: Label = Label.new()
-	guide_title.name = "GuideTitle"
-	guide_title.text = "Fig Guide"
-	_style_label(guide_title, 26, Color("#3b2b19"))
-	guide_panel.add_child(guide_title)
-
 	_add_section_label(guide_panel, "CULTIVAR")
 	notebook_label = Label.new()
 	notebook_label.name = "GuideNotebook"
@@ -2272,12 +2381,6 @@ func _build_ui() -> void:
 	help_panel.custom_minimum_size = drawer_content_rect.size
 	help_panel.add_theme_constant_override("separation", HelpUI.panel_separation())
 	_add_page_chrome_panel(help_panel)
-
-	var help_title: Label = Label.new()
-	help_title.name = "HelpTitle"
-	help_title.text = "How to Play"
-	_style_label(help_title, 26, Color("#3b2b19"))
-	help_panel.add_child(help_title)
 
 	_add_section_label(help_panel, "QUICK START")
 	help_text_label = Label.new()
@@ -2579,7 +2682,6 @@ func _village_requests_controls() -> Dictionary:
 	return {
 		"market_panel": market_panel,
 		"container_mode": true,
-		"market_title": market_title,
 		"weekly_label": festival_label,
 		"order_detail_label": order_label,
 		"accept_button": accept_order_button,
@@ -3021,7 +3123,8 @@ func _add_variety_button(parent: Control, index: int) -> void:
 	button.name = "FarmCuttingButton_%s" % index
 	button.text = String(variety["short"])
 	button.toggle_mode = true
-	button.custom_minimum_size = Vector2(90, 34)
+	button.custom_minimum_size = Vector2(0.0, 44.0)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_button(button, 12, "secondary")
 	button.pressed.connect(func() -> void: _select_variety(index))
 	parent.add_child(button)
@@ -4381,26 +4484,31 @@ func _update_transient_ui() -> void:
 
 func _update_ui() -> void:
 	_update_hud_labels()
-	buy_cuttings_button.text = "🌱 %s tree        $%s" % [String(varieties[selected_variety]["short"]), EconomySystem.cutting_cost(varieties, selected_variety)]
+	buy_cuttings_button.text = "%s tree  $%s" % [String(varieties[selected_variety]["short"]), EconomySystem.cutting_cost(varieties, selected_variety)]
 	if EconomySystem.can_upgrade_barrel(barrel_level):
-		barrel_button.text = "▣ Barrel +        $%s" % EconomySystem.barrel_upgrade_cost(barrel_level)
+		barrel_button.text = "Barrel +  $%s" % EconomySystem.barrel_upgrade_cost(barrel_level)
 	else:
-		barrel_button.text = "▣ Barrel max"
+		barrel_button.text = "Barrel max"
 	if pollinator_garden:
-		garden_button.text = "🌸 Flowers done"
+		garden_button.text = "Flowers done"
 	else:
-		garden_button.text = "🌸 Flowers        $%s" % EconomySystem.pollinator_garden_cost()
+		garden_button.text = "Flowers  $%s" % EconomySystem.pollinator_garden_cost()
 	garden_button.disabled = pollinator_garden
 	if game_paused:
-		pause_button.text = "▶ Resume"
+		pause_button.text = "▶"
+		pause_button.tooltip_text = "Resume game"
 		pause_label.text = "Paused"
 	else:
-		pause_button.text = "Ⅱ Pause"
+		pause_button.text = "Ⅱ"
+		pause_button.tooltip_text = "Pause game"
 		pause_label.text = ""
+
 	if sound_enabled:
-		sound_button.text = "🔊 Sound"
+		sound_button.text = "🔊"
+		sound_button.tooltip_text = "Mute sound"
 	else:
-		sound_button.text = "🔇 Muted"
+		sound_button.text = "🔇"
+		sound_button.tooltip_text = "Enable sound"
 	pause_label.visible = game_paused
 	pause_overlay_title.visible = game_paused
 	pause_overlay_hint.visible = game_paused

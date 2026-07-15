@@ -148,15 +148,22 @@ static func build() -> Dictionary:
 	content_scroll.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	page_stack.add_child(content_scroll)
 
+	var content_center: VBoxContainer = VBoxContainer.new()
+	content_center.name = "GlobalPageContentCenter"
+	content_center.clip_contents = true
+	content_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content_center.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	content_scroll.add_child(content_center)
+
 	var content: VBoxContainer = VBoxContainer.new()
 	content.name = "GlobalPageContent"
 	content.clip_contents = true
-	content.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	content.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	content.add_theme_constant_override(
 		"separation",
 		int(UIConstants.SECTION_GAP)
 	)
-	content_scroll.add_child(content)
+	content_center.add_child(content)
 
 	var bottom_navigation: Panel = Panel.new()
 	bottom_navigation.name = "GlobalBottomNavigation"
@@ -197,6 +204,7 @@ static func build() -> Dictionary:
 		"title_label": title_label,
 		"close_button": close_button,
 		"content_scroll": content_scroll,
+		"content_center": content_center,
 		"content": content,
 		"bottom_navigation": bottom_navigation,
 		"bottom_slot": bottom_slot,
@@ -258,9 +266,13 @@ static func apply_layout(
 		1.0,
 		UIConstants.PAGE_CHROME_BOTTOM_NAV_HEIGHT - UIConstants.INNER_GAP * 2.0
 	)
-	var bottom_row_width: float = (
-		float(BOTTOM_NAV_ITEM_COUNT) * UIConstants.TOUCH_TARGET_MIN
-		+ float(BOTTOM_NAV_ITEM_COUNT - 1) * UIConstants.INNER_GAP
+	var bottom_nav_min_width: float = (
+		UIConstants.NAV_ITEM_MIN_WIDTH * float(BOTTOM_NAV_ITEM_COUNT)
+		+ UIConstants.INNER_GAP * float(BOTTOM_NAV_ITEM_COUNT - 1)
+	)
+	var bottom_row_width: float = minf(
+		bottom_slot_width,
+		maxf(bottom_nav_min_width, bottom_slot_width)
 	)
 	var bottom_row_height: float = UIConstants.TOUCH_TARGET_MIN
 	var scroll_height: float = maxf(
@@ -360,11 +372,15 @@ static func apply_layout(
 		Vector2(inner_width, scroll_height)
 	)
 	_set_minimum(
+		controls.get("content_center", null) as Control,
+		Vector2(inner_width, 1.0)
+	)
+	_set_minimum(
 		controls.get("content", null) as Control,
 		Vector2(content_width, 1.0)
 	)
 
-	_set_horizontal_shrink(
+	_set_horizontal_center_shrink(
 		controls.get("content", null) as Control
 	)
 	_set_size(
@@ -373,6 +389,14 @@ static func apply_layout(
 	)
 	_set_size(
 		controls.get("content_scroll", null) as Control,
+		Vector2(inner_width, scroll_height)
+	)
+	_set_position(
+		controls.get("content_center", null) as Control,
+		Vector2.ZERO
+	)
+	_set_size(
+		controls.get("content_center", null) as Control,
 		Vector2(inner_width, scroll_height)
 	)
 	_set_size(
@@ -465,9 +489,9 @@ static func _set_position(control: Control, position: Vector2) -> void:
 		control.position = position
 
 
-static func _set_horizontal_shrink(control: Control) -> void:
+static func _set_horizontal_center_shrink(control: Control) -> void:
 	if control != null:
-		control.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		control.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 # ============================================================
 # /*=== PAGE CHROME LAYOUT END ===*/

@@ -35,7 +35,6 @@ const Layout = preload("res://scripts/ui/layout.gd")
 # ============================================================
 
 const CONTENT_W := UIConstants.READABLE_PAGE_WIDTH
-const HEADER_H := 30.0
 const SECTION_LABEL_H := 12.0
 const SUPPORT_LABEL_H := 16.0
 const LOGBOOK_H := 24.0
@@ -190,13 +189,6 @@ static func build_orderbook_layout(content: Rect2) -> Dictionary:
 # /*=== CONTROL SIZE HELPERS START ===*/
 # ============================================================
 
-static func title_minimum_size(content: Rect2) -> Vector2:
-	return Vector2(
-		safe_content_width(content),
-		HEADER_H
-	)
-
-
 static func section_label_minimum_size(content: Rect2) -> Vector2:
 	return Vector2(
 		safe_content_width(content),
@@ -341,12 +333,6 @@ static func apply_layout(controls: Dictionary, content: Rect2) -> void:
 		panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		panel.add_theme_constant_override("separation", 4)
-
-	_set_minimum_size(
-		controls,
-		"market_title",
-		title_minimum_size(content)
-	)
 
 	_set_minimum_size(
 		controls,

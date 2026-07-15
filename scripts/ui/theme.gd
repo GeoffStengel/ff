@@ -103,6 +103,20 @@ static func section_card_style() -> StyleBoxFlat:
 	)
 
 
+static func farm_section_card_style() -> StyleBoxFlat:
+	var style: StyleBoxFlat = rounded_style(
+		Color("#fffaf0"),
+		Color("#d5b777"),
+		UIConstants.CARD_RADIUS,
+		1
+	)
+	style.content_margin_left = 0.0
+	style.content_margin_right = 0.0
+	style.content_margin_top = 0.0
+	style.content_margin_bottom = 0.0
+	return style
+
+
 static func quiet_card_style() -> StyleBoxFlat:
 	return rounded_style(
 		JOURNAL_CARD_SOFT,

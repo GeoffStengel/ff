@@ -40,7 +40,6 @@ const STAT_CARD_GAP := UIConstants.CARD_GAP
 const PANEL_SIDE_PAD := 0.0
 const PANEL_TOP_PAD := 0.0
 
-const TITLE_H := 34.0
 const SECTION_HEADER_H := 16.0
 const STAT_CARD_H := 42.0
 const PRESERVE_STATS_H := 42.0
@@ -80,10 +79,6 @@ static func stat_card_gap() -> int:
 
 static func section_margin() -> int:
 	return SECTION_MARGIN
-
-
-static func title_minimum_size() -> Vector2:
-	return Vector2(0.0, TITLE_H)
 
 
 static func section_header_minimum_size() -> Vector2:

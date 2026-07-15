@@ -1,2 +1,8 @@
 res://scripts/ui/pantry_ui.gd
 res://scripts/main.gd
+res://scripts/ui/page_chrome_ui.gd
+res://scripts/ui/bottom_navigation_ui.gd
+res://scripts/ui/farm_controls_ui.gd
+res://scripts/ui/theme.gd
+res://scripts/ui/ui_constants.gd
+res://scripts/ui/village_requests_ui.gd

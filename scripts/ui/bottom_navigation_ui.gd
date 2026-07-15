@@ -42,8 +42,9 @@ static func add_item(
 	button.toggle_mode = true
 	button.focus_mode = Control.FOCUS_NONE
 	button.custom_minimum_size = item_minimum_size()
-	button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.add_theme_font_size_override(
 		"font_size",
 		UIConstants.SMALL_SIZE
@@ -56,7 +57,7 @@ static func add_item(
 
 static func item_minimum_size() -> Vector2:
 	return Vector2(
-		UIConstants.TOUCH_TARGET_MIN,
+		UIConstants.NAV_ITEM_MIN_WIDTH,
 		UIConstants.TOUCH_TARGET_MIN
 	)
 
