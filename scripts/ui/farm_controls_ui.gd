@@ -18,14 +18,15 @@ extends RefCounted
 # /*=== FARM CONTROLS CONSTANTS START ===*/
 # ============================================================
 
-const CONTENT_W := 376.0
+
 const PANEL_GAP := 5
+
 const ACTION_HINT_H := 24.0
-const SHOP_BUTTON_SIZE := Vector2(184, 32)
-const CLIPPING_BUTTON_SIZE := Vector2(CONTENT_W, 28)
-const UPGRADE_BUTTON_SIZE := Vector2(184, 32)
-const DAY_BUTTON_SIZE := Vector2(CONTENT_W, 34)
-const SAVE_BUTTON_SIZE := Vector2(88, 30)
+const SHOP_BUTTON_H := 32.0
+const CLIPPING_BUTTON_H := 28.0
+const UPGRADE_BUTTON_H := 32.0
+const DAY_BUTTON_H := 34.0
+const SAVE_BUTTON_H := 30.0
 
 # ============================================================
 # /*=== FARM CONTROLS CONSTANTS END ===*/
@@ -41,27 +42,27 @@ static func panel_separation() -> int:
 
 
 static func action_hint_minimum_size() -> Vector2:
-	return Vector2(CONTENT_W, ACTION_HINT_H)
+	return Vector2(0.0, ACTION_HINT_H)
 
 
 static func shop_button_minimum_size() -> Vector2:
-	return SHOP_BUTTON_SIZE
+	return Vector2(0.0, SHOP_BUTTON_H)
 
 
 static func clipping_button_minimum_size() -> Vector2:
-	return CLIPPING_BUTTON_SIZE
+	return Vector2(0.0, CLIPPING_BUTTON_H)
 
 
 static func upgrade_button_minimum_size() -> Vector2:
-	return UPGRADE_BUTTON_SIZE
+	return Vector2(0.0, UPGRADE_BUTTON_H)
 
 
 static func day_button_minimum_size() -> Vector2:
-	return DAY_BUTTON_SIZE
+	return Vector2(0.0, DAY_BUTTON_H)
 
 
 static func save_button_minimum_size() -> Vector2:
-	return SAVE_BUTTON_SIZE
+	return Vector2(0.0, SAVE_BUTTON_H)
 
 # ============================================================
 # /*=== FARM CONTROLS SIZE HELPERS END ===*/
@@ -74,9 +75,18 @@ static func save_button_minimum_size() -> Vector2:
 
 static func apply_layout(controls: Dictionary, content: Rect2) -> void:
 	var panel: VBoxContainer = controls.get("panel", null) as VBoxContainer
+	var container_mode: bool = bool(controls.get("container_mode", false))
 	if panel != null:
-		panel.position = content.position
-		panel.custom_minimum_size = content.size
+		if container_mode:
+			panel.position = Vector2.ZERO
+			panel.custom_minimum_size = Vector2(content.size.x, 1.0)
+		else:
+			panel.position = content.position
+			panel.custom_minimum_size = content.size
+			panel.size = content.size
+		panel.clip_contents = true
+		panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		panel.add_theme_constant_override("separation", PANEL_GAP)
 
 	_set_minimum_size(controls, "action_hint", action_hint_minimum_size())

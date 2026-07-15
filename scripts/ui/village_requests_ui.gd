@@ -34,7 +34,7 @@ const Layout = preload("res://scripts/ui/layout.gd")
 # /*=== VILLAGE REQUESTS CONSTANTS START ===*/
 # ============================================================
 
-const CONTENT_W := 340.0
+const CONTENT_W := UIConstants.READABLE_PAGE_WIDTH
 const HEADER_H := 30.0
 const SECTION_LABEL_H := 12.0
 const SUPPORT_LABEL_H := 16.0
@@ -47,9 +47,9 @@ const LIST_BACKPLATE_MIN_H := 146.0
 const WEEKLY_LABEL_H := 44.0
 const CURRENT_LABEL_H := 94.0
 const REQUEST_LIST_MIN_H := 112.0
-const ACTION_BUTTON_W := 316.0
+const ACTION_BUTTON_W := UIConstants.READABLE_PAGE_WIDTH - UIConstants.CARD_PADDING * 2.0
 
-const PANEL_LEFT_PAD := 20.0
+const PANEL_LEFT_PAD := 0.0
 const CONTRACT_Y := 42.0
 const BACKPLATE_GAP := UIConstants.CARD_GAP
 const INNER_PAD := UIConstants.CARD_PADDING
@@ -322,15 +322,24 @@ static func card_backplates(content: Rect2) -> Array[Rect2]:
 
 static func apply_layout(controls: Dictionary, content: Rect2) -> void:
 	var panel: Control = _control_or_null(controls, "market_panel")
+	var container_mode: bool = bool(controls.get("container_mode", false))
 
 	if panel != null:
 		var safe_panel_size: Vector2 = panel_size(content.size)
 
-		panel.position = panel_position(content.position)
-		panel.custom_minimum_size = safe_panel_size
-		panel.size = safe_panel_size
-		panel.size_flags_horizontal = Control.SIZE_FILL
-		panel.size_flags_vertical = Control.SIZE_FILL
+		if container_mode:
+			panel.position = Vector2.ZERO
+		else:
+			panel.position = panel_position(content.position)
+		panel.custom_minimum_size = Vector2(
+			safe_panel_size.x,
+			1.0 if container_mode else safe_panel_size.y
+		)
+		if not container_mode:
+			panel.size = safe_panel_size
+		panel.clip_contents = true
+		panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		panel.add_theme_constant_override("separation", 4)
 
 	_set_minimum_size(

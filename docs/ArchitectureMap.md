@@ -31,21 +31,23 @@
 - `scripts/ui/layout.gd`
 - `scripts/layout_system.gd`
   - Currently limited to shared farm board geometry and responsive layout checks.
+- `scripts/ui/section_header_ui.gd`
+  - Shared title-case feature section header creation with optional project texture icons.
 
 ## Drawer And Feature UI
 
 - `scripts/ui/drawer_ui.gd`
-  - Shared right drawer shell, content/hint geometry, feature panel sizing, and active-panel visibility.
+  - Legacy shared right drawer shell, content/hint geometry, feature panel sizing, and active-panel visibility fallback.
 - `scripts/ui/village_requests_ui.gd`
-  - Village Requests layout, sizing, card geometry, and request display copy.
+  - Village Requests layout, sizing, card geometry, request display copy, and PageChrome container-mode sizing.
 - `scripts/ui/farm_controls_ui.gd`
-  - Farm tab layout, sizing, spacing, and card geometry.
+  - Farm page layout, sizing, spacing, card geometry, and PageChrome container-mode sizing.
 - `scripts/ui/pantry_ui.gd`
-  - Pantry tab layout, sizing, scroll-shell geometry, responsive grid sizing, section/card styling wrappers, and pantry display copy.
+  - Pantry page layout, sizing, responsive grid sizing, section/card styling wrappers, and pantry display copy.
 - `scripts/ui/guide_ui.gd`
-  - Guide tab layout, sizing, spacing, card geometry, and guide display copy.
+  - Guide page layout, sizing, spacing, card geometry, guide display copy, and PageChrome container-mode sizing.
 - `scripts/ui/help_ui.gd`
-  - Help tab layout, sizing, spacing, card geometry, and help display copy.
+  - More/Help page layout, sizing, spacing, card geometry, help display copy, and PageChrome container-mode sizing.
 
 ## Other UI Modules
 
@@ -53,6 +55,6 @@
 - `scripts/ui/bottom_bar_ui.gd`
 - `scripts/ui/tool_panel_ui.gd`
 - `scripts/ui/page_chrome_ui.gd`
-  - Shared mobile-first page shell for migrated feature pages.
+  - Shared mobile-first page shell for all current feature pages.
 - `scripts/ui/bottom_navigation_ui.gd`
   - Shared bottom navigation item sizing, naming, icons, and active visual state.

@@ -167,6 +167,8 @@ Feature modules should use these tokens before creating feature-specific constan
 
 Feature UI modules may expose feature-specific wrappers around those styles when that keeps one screen easy to understand.
 
+`SectionHeaderUI` owns shared title-case section header Controls. Use it for feature section headings instead of duplicating plain Label construction in `main.gd`.
+
 
 ## Pantry Responsive Pattern
 
@@ -187,7 +189,7 @@ At narrow widths, Pantry item grids fall back to one column while preserving cal
 
 ## Page Chrome
 
-PageChrome is the shared mobile-first shell for migrated feature screens.
+PageChrome is the shared mobile-first shell for current feature screens.
 
 Structure:
 
@@ -199,6 +201,8 @@ PageChrome
 The header owns a left Back slot, centered title group, and right Close slot. The title group contains the feature icon on the left and the page title on the right.
 
 Desktop keeps the same mobile composition. Larger widths center the readable feature content and add breathing room rather than switching to an unrelated desktop layout.
+
+Farm, Village Requests, Pantry, Guide, and More/Help are mounted as children of `GlobalPageContent`. `GlobalPageContentScroll` is the intentional vertical scroll owner for these pages. Feature modules should use container-mode sizing when their controls live inside PageChrome so they do not manually position themselves with drawer coordinates.
 
 
 ## Bottom Navigation
@@ -213,4 +217,4 @@ Each item has:
 - active/selected state,
 - touch-friendly minimum size.
 
-During migration, bottom-nav callbacks reuse existing drawer/tab callbacks. The old drawer navigation remains available as a fallback until each page is migrated.
+Bottom navigation opens and switches PageChrome pages directly. The old side dock and drawer shell remain as fallback architecture, but migrated feature panels are not shown through the old drawer panel list.

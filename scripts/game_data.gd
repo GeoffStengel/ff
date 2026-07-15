@@ -29,8 +29,8 @@ static func varieties() -> Array[Dictionary]:
 		"care": "Slow and valuable: compost helps, missed watering delays harvest more than cheap varieties."
 	},
 	{
-		"name": "White Madeira #1",
-		"short": "White M #1",
+		"name": "White Madeira",
+		"short": "White Maderia",
 		"color": "#c6d36e",
 		"tag_color": "#d7c84f",
 		"seed_cost": 60,

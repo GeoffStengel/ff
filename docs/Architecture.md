@@ -27,6 +27,9 @@ main.gd
 |   `-- ...
 |
 |-- UI
+|   |-- PageChromeUI
+|   |-- BottomNavigationUI
+|   |-- SectionHeaderUI
 |   |-- DrawerUI
 |   |-- VillageRequestsUI
 |   |-- FarmControlsUI
@@ -100,6 +103,10 @@ They know:
 - rectangles
 
 They do not know gameplay.
+
+Current feature pages mount inside `PageChromeUI` through `GlobalPageContent`.
+`BottomNavigationUI` switches PageChrome pages while `main.gd` keeps callbacks and gameplay state.
+The old DrawerUI shell remains as fallback architecture, but migrated feature panels are not shown through the old drawer panel list.
 
 ---
 

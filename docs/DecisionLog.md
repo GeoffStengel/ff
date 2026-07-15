@@ -171,3 +171,17 @@ Benefits:
 - One intentional scroll owner for migrated pages
 - Existing callbacks and gameplay behavior stay intact
 - Future pages can migrate without rebuilding the chrome
+
+## PageChrome Remaining Page Migration
+
+Reason:
+Farm, Village Requests, Guide, and Help still used the old drawer page ownership while Pantry already lived inside PageChrome. This created two competing presentation paths and made bottom navigation only partially representative of the new mobile-first shell.
+
+Decision:
+All five feature pages now mount inside `GlobalPageContent` under PageChrome. `main.gd` still creates controls, owns callbacks, updates text, and coordinates gameplay. Feature UI modules now support a `container_mode` layout path so they can size themselves inside PageChrome without manually positioning themselves with old drawer coordinates. The legacy drawer shell and side dock remain in place as fallback navigation, but migrated panels are not shown through the old drawer panel list.
+
+Benefits:
+- One shared header, content scroll owner, and bottom navigation for all current feature pages
+- No old drawer page and new PageChrome page visible at the same time
+- Bottom navigation switches pages directly without changing gameplay callbacks
+- Feature modules can continue to be polished independently after the migration

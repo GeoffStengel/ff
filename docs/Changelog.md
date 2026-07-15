@@ -99,3 +99,7 @@
 - Added BottomNavigationUI for shared bottom navigation items and selected state.
 - Moved Pantry into the PageChrome content host while keeping old drawer navigation as migration fallback.
 - Reused existing side-tab callbacks for bottom navigation.
+- Migrated Farm, Village Requests, Guide, and More/Help into the shared PageChrome content host.
+- Bottom navigation now opens and switches PageChrome pages directly instead of toggling the old drawer page closed.
+- Added container-mode layout support to FarmControlsUI, VillageRequestsUI, GuideUI, and HelpUI so each migrated page uses the single GlobalPageContentScroll owner.
+- Added SectionHeaderUI and routed existing feature section labels through the shared title-case section header helper.

@@ -260,3 +260,25 @@ Create the first reusable mobile-first page shell and migrate Pantry into it wit
 
 - Manually test PageChrome and Pantry in Godot.
 - Migrate Guide next if the PageChrome pattern feels solid.
+
+
+## 2026-07-14 PageChrome Remaining Pages
+
+### Goal
+
+Move the remaining drawer feature pages into the shared PageChrome shell without changing gameplay behavior, callbacks, save data, or feature text ownership.
+
+### Completed
+
+- Mounted Farm, Village Requests, Pantry, Guide, and More/Help under the single `GlobalPageContent` host.
+- Kept the old drawer shell and side dock code as fallback architecture, but stopped exposing migrated panels through the old drawer panel list.
+- Added container-mode layout handling to FarmControlsUI, VillageRequestsUI, GuideUI, and HelpUI.
+- Updated bottom navigation to open and switch PageChrome pages directly instead of toggling the page closed through `_set_side_tab()`.
+- Added SectionHeaderUI and routed existing feature section-label helpers through it.
+- Kept all gameplay callbacks in `main.gd`.
+
+### Next
+
+- Manually test all five bottom navigation pages in Godot.
+- Check narrow/mobile-ish window widths and confirm `GlobalPageContentScroll` is the only vertical scroll owner for migrated pages.
+- Continue replacing remaining text-heavy page bodies with shared section/card components.

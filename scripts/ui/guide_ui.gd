@@ -66,9 +66,18 @@ static func legend_minimum_size() -> Vector2:
 
 static func apply_layout(controls: Dictionary, content: Rect2) -> void:
 	var panel: VBoxContainer = controls.get("panel", null) as VBoxContainer
+	var container_mode: bool = bool(controls.get("container_mode", false))
 	if panel != null:
-		panel.position = content.position
-		panel.custom_minimum_size = content.size
+		if container_mode:
+			panel.position = Vector2.ZERO
+			panel.custom_minimum_size = Vector2(content.size.x, 1.0)
+		else:
+			panel.position = content.position
+			panel.custom_minimum_size = content.size
+			panel.size = content.size
+		panel.clip_contents = true
+		panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		panel.add_theme_constant_override("separation", PANEL_GAP)
 
 	_set_minimum_size(controls, "notebook_label", notebook_minimum_size())

@@ -311,4 +311,11 @@ Bottom navigation rules:
 - Keep touch targets large enough for mouse and touch.
 - Show the selected page clearly.
 
-The old drawer stays available during migration. Pantry is the first migrated page; other pages should not be described as migrated until their content is actually moved into PageChrome.
+Section header rules:
+
+- Use `SectionHeaderUI` for feature page section headings.
+- Use title case.
+- Keep icons optional and project-texture based.
+- Avoid heavy extra boxes around section headings.
+
+Farm, Village Requests, Pantry, Guide, and More/Help now mount in PageChrome. The old drawer shell remains in the project as fallback architecture, but migrated feature panels are not shown through the old drawer panel list.

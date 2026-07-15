@@ -2,6 +2,7 @@ extends RefCounted
 
 const UIConstants := preload("res://scripts/ui/ui_constants.gd")
 const UITheme := preload("res://scripts/ui/theme.gd")
+const SectionHeaderUI := preload("res://scripts/ui/section_header_ui.gd")
 
 # ============================================================
 # PantryUI
@@ -31,12 +32,12 @@ const UITheme := preload("res://scripts/ui/theme.gd")
 # ============================================================
 
 const CONTENT_W := UIConstants.READABLE_PAGE_WIDTH
-const NARROW_BREAKPOINT := UIConstants.NARROW_CONTENT_BREAKPOINT
+const NARROW_BREAKPOINT := 390.0
 const PANEL_GAP := UIConstants.SECTION_GAP
 const ACTION_GAP := UIConstants.CARD_GAP
 const STAT_CARD_GAP := UIConstants.CARD_GAP
 
-const PANEL_SIDE_PAD := 8.0
+const PANEL_SIDE_PAD := 0.0
 const PANEL_TOP_PAD := 0.0
 
 const TITLE_H := 34.0
@@ -199,6 +200,55 @@ static func item_card_style_box() -> StyleBoxFlat:
 	return UITheme.quiet_card_style()
 
 
+
+static func jars_card_style_box() -> StyleBoxFlat:
+	var style: StyleBoxFlat = UITheme.rounded_style(
+		Color("#a8bd63"),
+		Color("#6f8738"),
+		10,
+		1
+	)
+
+	style.content_margin_left = 8.0
+	style.content_margin_right = 8.0
+	style.content_margin_top = 4.0
+	style.content_margin_bottom = 4.0
+
+	return style
+
+
+static func jam_card_style_box() -> StyleBoxFlat:
+	var style: StyleBoxFlat = UITheme.rounded_style(
+		Color("#a65bad"),
+		Color("#713576"),
+		10,
+		1
+	)
+
+	style.content_margin_left = 8.0
+	style.content_margin_right = 8.0
+	style.content_margin_top = 4.0
+	style.content_margin_bottom = 4.0
+
+	return style
+
+
+static func harvest_quantity_style_box() -> StyleBoxFlat:
+	var style: StyleBoxFlat = UITheme.rounded_style(
+		Color("#b8c978"),
+		Color("#8fa04f"),
+		8,
+		1
+	)
+
+	style.content_margin_left = 6.0
+	style.content_margin_right = 6.0
+	style.content_margin_top = 2.0
+	style.content_margin_bottom = 2.0
+
+	return style
+
+
 static func quantity_style_box() -> StyleBoxFlat:
 	return UITheme.quantity_badge_style()
 
@@ -216,33 +266,7 @@ static func create_section_header(
 	title: String,
 	icon: Texture2D
 ) -> HBoxContainer:
-	var header: HBoxContainer = HBoxContainer.new()
-	header.name = "%sHeader" % node_prefix
-	header.custom_minimum_size = section_header_minimum_size()
-	header.add_theme_constant_override("separation", int(UIConstants.INNER_GAP))
-
-	var icon_rect: TextureRect = TextureRect.new()
-	icon_rect.name = "%sHeaderIcon" % node_prefix
-	icon_rect.custom_minimum_size = Vector2(
-		UIConstants.SECTION_HEADER_ICON_SIZE,
-		UIConstants.SECTION_HEADER_ICON_SIZE
-	)
-	icon_rect.texture = icon
-	icon_rect.visible = icon != null
-	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	header.add_child(icon_rect)
-
-	var title_label: Label = Label.new()
-	title_label.name = "%sHeaderTitle" % node_prefix
-	title_label.text = title
-	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_label.add_theme_font_size_override("font_size", UIConstants.SECTION_HEADER_SIZE)
-	title_label.add_theme_color_override("font_color", Color("#725431"))
-	header.add_child(title_label)
-
-	return header
+	return SectionHeaderUI.create(node_prefix, title, icon)
 
 # ============================================================
 # /*=== PANTRY SECTION HEADER END ===*/
@@ -302,7 +326,7 @@ static func apply_layout(
 	if panel != null:
 		var panel_size: Vector2 = Vector2(
 			panel_width,
-			maxf(
+			1.0 if container_mode else maxf(
 				1.0,
 				content.size.y - PANEL_TOP_PAD
 			)
@@ -318,7 +342,8 @@ static func apply_layout(
 		panel.custom_minimum_size = panel_size
 		if not container_mode:
 			panel.size = panel_size
-		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		panel.clip_contents = true
+		panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 
 		panel.add_theme_constant_override(
