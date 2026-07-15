@@ -282,3 +282,43 @@ Move the remaining drawer feature pages into the shared PageChrome shell without
 - Manually test all five bottom navigation pages in Godot.
 - Check narrow/mobile-ish window widths and confirm `GlobalPageContentScroll` is the only vertical scroll owner for migrated pages.
 - Continue replacing remaining text-heavy page bodies with shared section/card components.
+
+
+## PageChrome and Pantry Visual Polish
+
+Continued the Fig Farmer OS / PageChrome UI migration and focused on isolating layout problems rather than making broad width changes.
+
+The shared GlobalPageChrome structure is now substantially more stable after the migration of Farm, Village Requests, Pantry, Guide, and More into the shared page content system.
+
+PageChrome title layout was refined so the shared title icon and title label are centered more intentionally between the navigation controls.
+
+Bottom navigation layout received additional cleanup after the global PageChrome migration exposed older width and container assumptions.
+
+Added the Lora font family to the project and applied Lora to the shared PageChrome page title. Typography roles and font sizes remain controlled through the existing UI constants system.
+
+Continued visual redesign of the Farm Pantry page using the mobile-first reference direction.
+
+Pantry Preserves cards now use stronger visual hierarchy:
+- Jars uses a green card treatment.
+- Jam uses a purple card treatment.
+- Card text uses a warm light color for improved contrast.
+- Preserves cards now include internal content margins so amount badges do not hug the card edges.
+
+Harvest quantity badges now use a dedicated soft olive-green visual treatment.
+
+Harvest cards received internal content padding so PantryHarvestAmount_N badges have breathing room from the right edge.
+
+The Pantry visual direction is moving toward softer rounded cards, stronger color roles, improved spacing, clearer hierarchy, and a mobile-first layout that also scales cleanly to desktop.
+
+No gameplay logic, save keys, inventory behavior, callbacks, or resource paths were intentionally changed during this visual polish pass.
+
+Current UI direction:
+parent controls available width -> shared PageChrome hosts feature content -> feature page fills available content width -> rows and grids fill page width -> cards fill assigned cells -> labels expand -> quantity badges remain controlled and padded.
+
+Next visual priorities:
+- Continue refining PageChrome header alignment and spacing.
+- Polish GlobalBottomNavigation sizing, icon placement, and selected states.
+- Continue Pantry card hierarchy and spacing.
+- Establish shared typography roles for page titles, section headers, body text, and buttons.
+- Review whether the legacy left MENUS dock can be retired after bottom navigation is fully stable.
+- Perform a full migrated-page runtime smoke test before marking v4.2.0 as the stable fallback.
